@@ -1,0 +1,25 @@
+{
+  "name": "fast-pac",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test.js",
+  "dependencies": {
+    "web-ext": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/firefox-webext-browser": "^70.0.1",
+    "@types/node": "^13.9.5",
+    "copy-webpack-plugin": "^5.1.1",
+    "raw-loader": "^4.0.0",
+    "ts-loader": "^6.2.2",
+    "typescript": "^3.8.3",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "scripts": {
+    "build": "webpack && web-ext build --source-dir=./dist --overwrite-dest",
+    "start:firefox": "web-ext run --source-dir=./dist/"
+  },
+  "author": "",
+  "license": "ISC"
+}

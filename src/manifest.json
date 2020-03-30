@@ -1,0 +1,14 @@
+{
+    "manifest_version": 2,
+    "name": "Fast PAC",
+    "version": "1.0",
+    "description": "",
+    "background": {
+        "page": "./index.html"
+    },
+    "permissions": [
+        "proxy",
+        "storage",
+        "<all_urls>"
+    ]
+}
