@@ -16,13 +16,11 @@ export class TrieNodeMeta {
 
 export class TrieNode {
     value: string | null;
-    next: TrieNode | null;
-    children: TrieNode | null;
+    children: TrieNode[];
     meta: TrieNodeMeta | null;
     constructor() {
         this.value = null;
-        this.next = null;
-        this.children = null;
+        this.children = [];
         this.meta = null;
     }
 
@@ -36,53 +34,43 @@ export class TrieNode {
             this.value = path[index];
         }
 
-        if (path[index] === this.value) {
-            if (index + 1 >= path.length) {
-                this.meta = meta;
+        if (index + 1 === path.length) {
+            if (this.meta !== null) {
+                console.warn('overwrite meta', this.meta);
+            }
+            this.meta = meta;
+            return;
+        }
+
+        for (const child of this.children) {
+            if (child.value === path[index + 1]) {
+                child.insert(path, index + 1, meta);
                 return;
             }
-            if (this.children === null) {
-                this.children = new TrieNode();
-            }
-            // console.log(`Insert '${path[index + 1]}' under ${this.value}`);
-            this.children.insert(path, index + 1, meta);
-        } else {
-            let prev: TrieNode = this;
-            while (prev.next !== null && prev.next.value !== path[index]) {
-                prev = prev.next;
-            }
-            if (prev.next === null) {
-                prev.next = new TrieNode();
-            }
-            // console.log(`Add '${path[index]}' next to ${prev.value}`);
-            prev.next.insert(path, index, meta);
         }
+        this.children.push(new TrieNode());
+        this.children[0].insert(path, index + 1, meta);
     }
 
     getMeta(path: string[], index: number): TrieNodeMeta | null {
         // console.log('Find: ', path, 'in', this);
-        if (index >= path.length || this.value === null) {
+        if (this.value === null || index >= path.length) {
             return null;
         }
         if (this.value === path[index]) {
-            if (this.children === null) {
+            if (this.children.length === 0) {
                 // 部分匹配也要返回
                 return this.meta;
             }
-            let meta = this.children.getMeta(path, index + 1);
-            if (meta !== null) {
-                return meta;
+            let meta: TrieNodeMeta | null = null;
+            for (const child of this.children) {
+                meta = child.getMeta(path, index + 1);
+                if (meta !== null) {
+                    break;
+                }
             }
-            return this.meta;
-        } else {
-            let prev: TrieNode = this;
-            while (prev.next !== null && prev.next.value !== path[index]) {
-                prev = prev.next;
-            }
-            if (prev.next === null) {
-                return null;
-            }
-            return prev.next.getMeta(path, index);
+            return meta;
         }
+        return null;
     }
 }
