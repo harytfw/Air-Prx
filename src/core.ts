@@ -4,10 +4,14 @@ const HTTPS = 'https://';
 export default class Core {
     root: TrieNode;
     debug: boolean;
-    skip: Set<string>;
+    normalCache: Set<string>;
+    exceptionRoot: TrieNode;
+    exceptionCache: Set<string>;
     constructor() {
         this.root = new TrieNode();
-        this.skip = new Set();
+        this.exceptionRoot = new TrieNode();
+        this.normalCache = new Set();
+        this.exceptionCache = new Set();
         this.debug = false;
     }
 
@@ -25,7 +29,7 @@ export default class Core {
     }
     clear() {
         this.root = new TrieNode();
-        this.skip = new Set();
+        this.normalCache = new Set();
     }
     addRule(rule: string) {
         const meta = new TrieNodeMeta();
@@ -62,9 +66,18 @@ export default class Core {
         }
         const path = rule.split('.').reverse();
         meta.path = path;
-        this.root.insert(path, 0, meta);
+        if (meta.exception) {
+            this.exceptionRoot.insert(path, 0, meta);
+        } else {
+            this.root.insert(path, 0, meta);
+        }
     }
+
     isMatch(url: string) {
+        return !this.isMatchInternal(url, this.exceptionRoot, this.exceptionCache) && this.isMatchInternal(url, this.root, this.normalCache)
+    }
+
+    isMatchInternal(url: string, node: TrieNode, cache: Set<string>) {
         if (this.debug) {
             console.time('matcher');
         }
@@ -78,14 +91,13 @@ export default class Core {
         } else {
             domainName = url.substring(slashIndex + 2, url.length);
         }
-        if (this.skip.has(domainName)) {
+        if (cache.has(domainName)) {
             this.debug && console.timeEnd('matcher');
             return false;
         }
         const protocol = url.substring(0, slashIndex + 2);
         const path = domainName.split('.').reverse();
-        const meta = this.root.getMeta(path, 0);
-        const except = meta && meta.exception;
+        const meta = node.getMeta(path, 0);
         let res = false;
         if (this.debug) {
             console.log(url, protocol, path, 'meta:', meta);
@@ -95,7 +107,6 @@ export default class Core {
                 res = false;
                 break;
             }
-
             if (meta.isParentDomain) {
                 res = meta.path.length < path.length;
                 break;
@@ -107,17 +118,16 @@ export default class Core {
             }
 
             res = true;
-            break
+            break;
         }
 
         if (this.debug) {
             console.timeEnd('matcher');
         }
-        const final = !except && res;
-        if (!final) {
-            this.skip.add(domainName);
+        if (!res) {
+            cache.add(domainName);
         }
-        return final;
+        return res;
     }
 
     isMatchWithTimer(url) {
