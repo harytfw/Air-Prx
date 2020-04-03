@@ -1,4 +1,5 @@
 export default {
+
     loadText(text: string): string[] {
         return text
             .trim()
@@ -6,7 +7,7 @@ export default {
             .map(line => line.trim())
             .filter(line => !line.startsWith('!'))
             .filter(line => {
-                return line.startsWith('.') || line.startsWith('@@') || line.startsWith('||') || line.startsWith('|');
+                return line.startsWith('/') || line.startsWith('.') || line.startsWith('@@') || line.startsWith('||') || line.startsWith('|');
             })
     },
     loadgfw(): Promise<string[]> {
@@ -19,9 +20,9 @@ export default {
     loadGithub() {
         return null
     },
-    loadWebExtStorage(area: 'local' | 'sync' = 'local') {
+    loadWebExtStorage(area: 'local' | 'sync' = 'local'): Promise<string[] | undefined> {
         return browser.storage.local.get('rules').then(obj => {
-            return this.loadText(obj['rules']);
+            return obj['rules'];
         });
     },
     loadLocalStorage() {

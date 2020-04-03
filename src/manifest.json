@@ -4,7 +4,12 @@
     "version": "1.0",
     "description": "",
     "background": {
-        "page": "./index.html"
+        "page": "./main.html"
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true,
+        "browser_style": true
     },
     "permissions": [
         "proxy",

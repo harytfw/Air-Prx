@@ -2,11 +2,14 @@ const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    entry: './src/index.js',
+    entry: {
+        main: './src/main.ts',
+        options: './src/options.ts'
+    },
     mode: "development",
     devtool: 'source-map',
     output: {
-        filename: 'main.js',
+        filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
     },
     module: {
@@ -27,7 +30,8 @@ module.exports = {
     target: "web",
     plugins: [
         new CopyPlugin([
-            { from: './src/index.html', to: './' },
+            { from: './src/main.html', to: './' },
+            { from: './src/options.html', to: './' },
             { from: './src/manifest.json', to: './' },
             { from: './src/gfwlist.txt', to: './' },
         ]),

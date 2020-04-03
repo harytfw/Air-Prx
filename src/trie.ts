@@ -14,6 +14,24 @@ export class TrieNodeMeta {
     }
 }
 
+function binSearch<U, T>(arr: U[], target: T, fn: (item: U) => T) {
+    let left = 0;
+    let right = arr.length - 1;
+    while (left <= right) {
+        let mid = Math.floor((left + right) / 2);
+        const c = fn(arr[mid]);
+        if (c === target) {
+            return mid;
+        }
+        if (c > target) {
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return -1;
+}
+
 export class TrieNode {
     value: string | null;
     children: TrieNode[];
@@ -24,53 +42,69 @@ export class TrieNode {
         this.meta = null;
     }
 
+    sort() {
+        this.children = this.children.sort((a, b) => {
+            if (a.value === b.value) {
+                return 0
+            }
+            if (a.value == null) {
+                return 1;
+            }
+            if (b.value == null) {
+                return -1;
+            }
+            if (a.value > b.value) {
+                return 1
+            }
+            return -1;
+        });
+        for (const child of this.children) {
+            child.sort();
+        }
+    }
+
     insert(path: string[], index: number, meta: TrieNodeMeta) {
 
         if (index >= path.length) {
             return;
         }
 
-        if (this.value === null) {
-            this.value = path[index];
-        }
-
-        if (index + 1 === path.length) {
-            if (this.meta !== null) {
-                console.warn('overwrite meta', this.meta);
-            }
-            this.meta = meta;
-            return;
-        }
-
         for (const child of this.children) {
-            if (child.value === path[index + 1]) {
-                child.insert(path, index + 1, meta);
+            if (child.value === path[index]) {
+                if (index + 1 == path.length) {
+                    child.meta = meta;
+                } else {
+                    child.insert(path, index + 1, meta);
+                }
                 return;
             }
         }
-        this.children.push(new TrieNode());
-        this.children[0].insert(path, index + 1, meta);
+        const last = new TrieNode();
+        this.children.push(last);
+        last.value = path[index]
+        if (index + 1 === path.length) {
+            last.meta = meta;
+        } else {
+            last.insert(path, index + 1, meta);
+        }
     }
 
-    getMeta(path: string[], index: number): TrieNodeMeta | null {
+    getMeta(path: string[], index: number, debug = false): TrieNodeMeta | null {
         // console.log('Find: ', path, 'in', this);
-        if (this.value === null || index >= path.length) {
+        if (index >= path.length) {
             return null;
         }
-        if (this.value === path[index]) {
-            if (this.children.length === 0) {
-                // 部分匹配也要返回
-                return this.meta;
+        let curArr = this.children;
+        let prevNode: TrieNode | null = null;
+        while (index < path.length) {
+            let pos = binSearch(curArr, path[index], a => a.value);
+            if (pos === -1) {
+                return prevNode !== null ? prevNode.meta : null;
             }
-            let meta: TrieNodeMeta | null = null;
-            for (const child of this.children) {
-                meta = child.getMeta(path, index + 1);
-                if (meta !== null) {
-                    break;
-                }
-            }
-            return meta;
+            prevNode = curArr[pos];
+            curArr = curArr[pos].children;
+            index += 1;
         }
-        return null;
+        return prevNode !== null ? prevNode.meta : null;
     }
 }

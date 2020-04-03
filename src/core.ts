@@ -1,18 +1,27 @@
 import { TrieNode, TrieNodeMeta } from './trie'
 const HTTP = 'http://';
 const HTTPS = 'https://';
+const EMPTY_CACHE = new Set<string>();
 export default class Core {
     root: TrieNode;
     debug: boolean;
     normalCache: Set<string>;
     exceptionRoot: TrieNode;
     exceptionCache: Set<string>;
+    reExps: RegExp[];
+    initCompleteFlag: boolean;
+    cache: Map<string, boolean>;
+    subStrings: string[];
     constructor() {
         this.root = new TrieNode();
         this.exceptionRoot = new TrieNode();
         this.normalCache = new Set();
         this.exceptionCache = new Set();
+        this.reExps = [];
         this.debug = false;
+        this.cache = new Map();
+        this.subStrings = [];
+        this.initCompleteFlag = false;
     }
 
     _notSupport(rule: string) {
@@ -38,9 +47,10 @@ export default class Core {
             rule = rule.substring(2);
         }
         if (rule.startsWith('.')) {
-            meta.isParentDomain = true;
-            rule = rule.substring(1);
+            this.subStrings.push(rule);
+            return;
         } else if (rule.startsWith('||')) {
+            meta.isParentDomain = true;
             rule = rule.substring(2);
         } else if (rule.startsWith('|')) {
             meta.exact = true;
@@ -55,6 +65,8 @@ export default class Core {
                 this._notSupport(rule);
                 return;
             }
+        } else if (rule.startsWith('/')) {
+            this.reExps.push(new RegExp(rule.substr(1, rule.length - 1)));
         } else {
             this._notSupport(rule);
             return;
@@ -73,42 +85,88 @@ export default class Core {
         }
     }
 
-    isMatch(url: string) {
-        return !this.isMatchInternal(url, this.exceptionRoot, this.exceptionCache) && this.isMatchInternal(url, this.root, this.normalCache)
+    setDebug(d) {
+        if (d) {
+            this.cache.clear();
+        }
+        this.debug = d;
     }
 
-    isMatchInternal(url: string, node: TrieNode, cache: Set<string>) {
-        if (this.debug) {
-            console.time('matcher');
-        }
-        // console.log('url:', url);
-        let slashIndex = url.indexOf('//');
-        let lastSlashIndex = url.indexOf('/', slashIndex + 2);
-        let domainName: string;
-        if (lastSlashIndex >= 0) {
-            // console.log('slashIndex:', slashIndex);
-            domainName = url.substring(slashIndex + 2, lastSlashIndex);
-        } else {
-            domainName = url.substring(slashIndex + 2, url.length);
-        }
-        if (cache.has(domainName)) {
-            this.debug && console.timeEnd('matcher');
+    initComplete() {
+        this.root.sort();
+        this.exceptionRoot.sort();
+        this.initCompleteFlag = true;
+    }
+
+    isMatch(url: string) {
+        if (!this.initComplete) {
+            console.error("not complete init");
             return false;
         }
-        const protocol = url.substring(0, slashIndex + 2);
-        const path = domainName.split('.').reverse();
-        const meta = node.getMeta(path, 0);
-        let res = false;
+        return this.isMatchInternal(url, this.root)
+    }
+
+    isMatchInternal(url: string, node: TrieNode) {
+        let t0 = 0;
         if (this.debug) {
-            console.log(url, protocol, path, 'meta:', meta);
+            t0 = performance.now();
         }
+        let useCache = false;
+        let res = false;
+        let domainName: string;
+        outer:
         for (; ;) {
+            // console.log('url:', url);
+            let slashIndex = url.indexOf('//');
+            let lastSlashIndex = url.indexOf('/', slashIndex + 2);
+
+            if (lastSlashIndex >= 0) {
+                // console.log('slashIndex:', slashIndex);
+                domainName = url.substring(slashIndex + 2, lastSlashIndex);
+            } else {
+                domainName = url.substring(slashIndex + 2, url.length);
+            }
+
+            if (this.cache.has(domainName)) {
+                useCache = true;
+                res = this.cache.get(domainName)!;
+                break
+            }
+
+            const protocol = url.substring(0, slashIndex + 2);
+
+            let path = domainName.split('.').reverse();
+            const meta = node.getMeta(path, 0, this.debug);
+
+
             if (meta === null) {
+
+                for (const re of this.reExps) {
+                    if (re.test(domainName)) {
+                        if (this.debug) {
+                            console.log("match regexp", re);
+                        }
+                        res = true;
+                        break outer;
+                    }
+                }
+
+                for (const str of this.subStrings) {
+                    if (url.includes(str)) {
+                        if (this.debug) {
+                            console.log("match substring", str);
+                        }
+                        res = true;
+                        break outer;
+                    }
+                }
+
                 res = false;
                 break;
             }
+
             if (meta.isParentDomain) {
-                res = meta.path.length < path.length;
+                res = meta.path.length <= path.length;
                 break;
             }
 
@@ -120,12 +178,12 @@ export default class Core {
             res = true;
             break;
         }
-
-        if (this.debug) {
-            console.timeEnd('matcher');
+        if (!useCache && !this.debug) {
+            this.cache.set(domainName, res);
         }
-        if (!res) {
-            cache.add(domainName);
+        if (this.debug) {
+            let t1 = performance.now();
+            console.info(url, "takes", t1 - t0, 'ms')
         }
         return res;
     }
