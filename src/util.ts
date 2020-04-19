@@ -67,15 +67,3 @@ export function ipToInt32(ip: string) {
     let int32 = ipArr[0] << 24 | ipArr[1] << 16 | ipArr[2] << 8 | ipArr[3];
     return int32;
 }
-
-if (!module.parent) {
-    const array = ['www.aaa.com', 'zzz.sl.com', 'www.go.com', 'blue.sky.com', 'black.wolf.com'];
-    array.sort();
-    console.log(array);
-    const target = 'abc.qwe.www.blue.sky.com';
-    for (let i = 0; i < target.length; i++) {
-        console.log(`lower bound: ${target.charAt(i)}`, lowerBound(array, 0, array.length - 1, 0, target, i));
-        console.log(`upper bound: ${target.charAt(i)}`, upperBound(array, 0, array.length - 1, 0, target, i));
-        console.log();
-    }
-}

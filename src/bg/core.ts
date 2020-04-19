@@ -1,76 +1,76 @@
 import { TrieNode, TrieNodeMeta } from '../trie'
-import { lowerBound, upperBound } from '../util'
+import { lowerBound, extractDomainAndProtocol } from '../util'
 import { RuleGroup } from '../group';
 import { debugLog } from '../log';
 import * as types from '../types';
+import { IpRuleGroup } from '../ip-rule-group';
+import { StdRuleGroup } from '../std-rule-group';
+import { BaseRuleGroup } from '../base-rule-group';
 
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 
 export default class Core {
 
-    groups: RuleGroup[];
+    groups: BaseRuleGroup[];
 
     constructor() {
         this.groups = [];
-        // this.groups.push(new RuleGroup(DIRECT_PROXYINFO, 'exception'));
-        // this.groups.push(new RuleGroup({
-        //     type: 'socks',
-        //     host: '127.0.0.1',
-        //     port: 10808,
-        // }, "custom"));
-    }
 
-    addExceptionRule(rule: string) {
-        this.groups.find(a => a.name === 'exception')!.addRule(rule);
-    }
-
-    addCustomRule(rule: string) {
-        this.groups.find(a => a.name === 'custom')!.addRule(rule);
-    }
-
-    createGroup(rules: string[], proxyInfo, name) {
-        const g = new RuleGroup(proxyInfo, name);
-    }
-
-    addGroup(plainGroup: types.PlainGroupObject) {
-        const g = RuleGroup.fromJSON(plainGroup);
-        debugLog('add group', g);
-        this.groups.push(g);
     }
 
     sortAll() {
-        this.groups.forEach(g => g.sort());
+        this.groups.forEach(g => {
+            if (g instanceof StdRuleGroup) {
+                g.sort();
+            }
+        });
     }
 
-    async getProxy(url: string, documentUrl?: string): Promise<types.ProxyInfo> {
+    buildRequestSummary(requestInfo) {
+        const [hostname, protocol] = extractDomainAndProtocol(requestInfo.url);
+        const summary: types.RequestSummary = {
+            url: requestInfo.url,
+            documentUrl: requestInfo.documentUrl,
+            hostName: hostname,
+            protocol: protocol,
+        }
+        return summary;
+    }
+
+    async fillIpAddress(summary: types.RequestSummary) {
+        const address = await browser.dns.resolve(summary.hostName);
+        return address;
+    }
+
+    async getProxy(requestInfo): Promise<types.ProxyInfo> {
+        const summary = this.buildRequestSummary(requestInfo);
         for (const g of this.groups) {
-            const u = g.useDocumentUrl ? documentUrl : url;
-            if (typeof u !== 'string') {
-                continue;
+            if (g instanceof IpRuleGroup) {
+                await this.fillIpAddress(summary);
             }
-            const result = await g.getProxyResult(u);
+            const result = await g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
-                debugLog(u, 'use', g.proxyInfo);
+                debugLog(summary.url, 'use', g.proxyInfo);
                 return Promise.resolve(g.proxyInfo);
             }
             if (result === types.ProxyResult.notProxy) {
-                debugLog(u, 'not use proxy');
+                debugLog(summary.url, 'not use proxy');
                 return Promise.resolve(DIRECT_PROXYINFO);
             }
         }
-        debugLog(url, ' did not match rule , no proxy is used');
+        debugLog(summary.url, ' did not match rule , no proxy is used');
         return Promise.resolve(DIRECT_PROXYINFO);
     }
 
-    toConfig(): types.Configuration {
-        return {
-            features: [],
-            groups: this.groups.map(g => g.toJSON())
-        }
-    }
-
     fromConfig(config: types.Configuration) {
-        this.groups = config.groups.map(g => RuleGroup.fromJSON(g));
+        this.groups = config.groups.map(g => {
+            if (g.useIpAddress) {
+                return new IpRuleGroup(g.name, g.proxyInfo, g.internalRules);
+            } else {
+                return new StdRuleGroup(g.name, g.proxyInfo, g.internalRules);
+            }
+            RuleGroup.fromJSON(g)
+        });
         debugLog(this.groups);
     }
 }

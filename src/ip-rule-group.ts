@@ -2,14 +2,17 @@ import * as types from './types';
 import { BaseRuleGroup } from './base-rule-group';
 import { debugLog } from './log';
 import { ipToInt32 } from './util';
-class IpRuleGroup extends BaseRuleGroup {
+export class IpRuleGroup extends BaseRuleGroup {
 
     internalIpAddress: string[];
     ipMask: number[][];
-    constructor(name: string, proxyInfo: types.ProxyInfo) {
+    constructor(name: string, proxyInfo: types.ProxyInfo, ipList) {
         super(name, proxyInfo);
         this.internalIpAddress = [];
         this.ipMask = [];
+        for (const ip of ipList) {
+            this.addIpAddress(ip);
+        }
     }
 
     addIpAddress(ipAddrWithMask: string) {
@@ -25,15 +28,15 @@ class IpRuleGroup extends BaseRuleGroup {
 
     getProxyResult(summary: types.RequestSummary) {
         if (!summary.ipAddress) {
-            return Promise.reject();
+            throw new Error('require ip address');
         }
         const int32Ip = ipToInt32(summary.ipAddress);
         for (const mask of this.ipMask) {
             if ((mask[1] & int32Ip) === mask[0]) {
-                return Promise.resolve(types.ProxyResult.proxy);
+                return types.ProxyResult.proxy;
             }
         }
-        return Promise.resolve(types.ProxyResult.continue);
+        return types.ProxyResult.continue;
     }
 }
 

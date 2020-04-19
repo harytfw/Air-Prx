@@ -3,20 +3,22 @@ import { BaseRuleGroup } from './base-rule-group';
 import { TrieNode, TrieNodeMeta } from './trie';
 import { debugLog } from './log';
 
-class StdRuleGroup extends BaseRuleGroup {
+export class StdRuleGroup extends BaseRuleGroup {
 
     root: TrieNode;
     regExps: RegExp[];
     subStrings: string[];
-    ipMask: number[][];
     internalRules: string[];
-    constructor(name: string, proxyInfo: types.ProxyInfo) {
+    constructor(name: string, proxyInfo: types.ProxyInfo, rules: string[]) {
         super(name, proxyInfo);
         this.regExps = [];
         this.subStrings = [];
         this.internalRules = [];
         this.root = new TrieNode();
-        this.ipMask = [];
+
+        for (const rule of rules) {
+            this.addRule(rule);
+        }
     }
 
 
@@ -24,6 +26,12 @@ class StdRuleGroup extends BaseRuleGroup {
         // throw new Error("not support rule: " + rule);
         console.warn("not support rule: " + rule);
     }
+
+    sort() {
+        this.root.sort();
+        this.subStrings.sort();
+    }
+
 
     addRule(rule: string) {
         this.internalRules.push(rule);
@@ -74,12 +82,12 @@ class StdRuleGroup extends BaseRuleGroup {
     }
 
 
-    getProxyResult(summary: types.RequestSummary): Promise<types.ProxyResult> {
+    getProxyResult(summary: types.RequestSummary): types.ProxyResult {
         const { hostName, protocol, url } = summary;
         let t0 = performance.now();
         let found = false;
         if (this.useCache && this.proxyCache.has(hostName)) {
-            return Promise.resolve(this.proxyCache.get(hostName)!);
+            return this.proxyCache.get(hostName)!;
         }
 
         const path = hostName.split('.').reverse();
@@ -132,6 +140,6 @@ class StdRuleGroup extends BaseRuleGroup {
         let t1 = performance.now();
         debugLog(url, "takes", t1 - t0, 'ms in group:', this.name);
 
-        return Promise.resolve(res);
+        return res;
     }
 }

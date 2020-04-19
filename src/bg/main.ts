@@ -19,9 +19,7 @@ async function init() {
         return;
     }
 
-    for (const plainGroup of config.groups) {
-        core.addGroup(plainGroup)
-    }
+    core.fromConfig(config);
 
     core.sortAll();
 }
@@ -35,7 +33,7 @@ function handleProxyRequest(requestInfo) {
     const start = performance.now();
 
     debugLog(requestInfo.requestId, 'start');
-    const p = core.getProxy(requestInfo.url, requestInfo.documentUrl);
+    const p = core.getProxy(requestInfo);
     return p.then((proxy) => {
         debugLog(requestInfo.requestId, 'end', requestInfo.url, performance.now() - start, 'ms');
         return proxy;

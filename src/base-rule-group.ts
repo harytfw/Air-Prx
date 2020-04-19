@@ -9,8 +9,7 @@ export class BaseRuleGroup {
 
     subSource: string;
     subType: string;
-    useDocumentUrl: boolean;
-    useIpAddress: boolean;
+;
 
     constructor(name: string, proxyInfo: types.ProxyInfo) {
         this.name = name;
@@ -18,13 +17,10 @@ export class BaseRuleGroup {
         this.subSource = "";
         this.proxyCache = new Map();
         this.useCache = true;
-        this.useDocumentUrl = false;
-        this.useIpAddress = false;
         this.proxyInfo = proxyInfo;
     }
 
-    getProxyResult(summary: types.RequestSummary): Promise<types.ProxyResult> {
+    getProxyResult(summary: types.RequestSummary): types.ProxyResult {
         throw new Error('TODO');
     }
-
 }

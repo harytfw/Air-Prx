@@ -34,6 +34,7 @@ export interface RequestSummary {
     url: string,
     hostName: string,
     protocol: string,
+    documentUrl?: string,
     ipAddress?: string,
 }
 
