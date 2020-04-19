@@ -89,7 +89,7 @@ export class TrieNode {
         }
     }
 
-    getMeta(path: string[], index: number, debug = false): TrieNodeMeta | null {
+    getMeta(path: string[], index: number): TrieNodeMeta | null {
         // console.log('Find: ', path, 'in', this);
         if (index >= path.length) {
             return null;

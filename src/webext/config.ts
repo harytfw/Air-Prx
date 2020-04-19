@@ -1,11 +1,11 @@
 import { platform } from "os";
+import { ProxyInfo } from "../types";
 
-const proxyInfo = {
+const proxyInfo: ProxyInfo = {
     type: 'http',
     host: '127.0.0.1',
     port: 1080
 }
-
 
 browser.storage.local.get(['server']).then(({ server }) => {
     if (typeof server === 'string') {

@@ -4,16 +4,23 @@
     "version": "1.0",
     "description": "",
     "background": {
-        "page": "./main.html"
+        "page": "./bg/main.html"
     },
     "options_ui": {
-        "page": "options.html",
+        "page": "./options/options.html",
         "open_in_tab": true,
         "browser_style": true
     },
     "permissions": [
         "proxy",
         "storage",
+        "dns",
         "<all_urls>"
-    ]
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "{a46bdc34-a232-46dd-8ed7-39611361cad5}",
+            "strict_min_version": "71.0"
+        }
+    }
 }

@@ -3,8 +3,8 @@ const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
-        main: './src/main.ts',
-        options: './src/options.ts'
+        'bg/main': './src/bg/main.ts',
+        'options/options': './src/options/options.ts',
     },
     mode: "development",
     devtool: 'source-map',
@@ -30,8 +30,8 @@ module.exports = {
     target: "web",
     plugins: [
         new CopyPlugin([
-            { from: './src/main.html', to: './' },
-            { from: './src/options.html', to: './' },
+            { from: './src/bg/main.html', to: './bg/main.html' },
+            { from: './options/options.*(html|css)', to: './', context: './src' },
             { from: './src/manifest.json', to: './' },
             { from: './src/gfwlist.txt', to: './' },
         ]),
