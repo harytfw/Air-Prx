@@ -1,11 +1,12 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
-
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
 module.exports = {
     entry: {
         'bg/main': './src/bg/main.ts',
-        'options/options': './src/options/options.ts',
+        'options/index': './src/options/index.ts',
     },
+    target: 'node',
     mode: "development",
     devtool: 'source-map',
     output: {
@@ -15,25 +16,45 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
-                use: 'ts-loader',
-                exclude: /node_modules/,
-            }, {
-                test: /\.txt$/i,
-                use: 'raw-loader',
+                test: /\.ts$/,
+                loader: 'ts-loader',
+                options: { appendTsSuffixTo: [/\.vue$/] }
             },
+            {
+                test: /\.vue$/,
+                loader: 'vue-loader',
+                options: {
+                    hotReload: false // 关闭热重载
+                }
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    'vue-style-loader',
+                    'css-loader'
+                ]
+            },
+            {
+                test: /\.less$/,
+                use: [
+                    'vue-style-loader',
+                    'css-loader',
+                    'less-loader'
+                ]
+            }
         ],
     },
     resolve: {
-        extensions: ['.tsx', '.ts', '.js'],
+        extensions: ['.ts', '.js'],
     },
     target: "web",
     plugins: [
+        new VueLoaderPlugin(),
         new CopyPlugin([
             { from: './src/bg/main.html', to: './bg/main.html' },
             { from: './options/options.*(html|css)', to: './', context: './src' },
             { from: './src/manifest.json', to: './' },
-            { from: './src/gfwlist.txt', to: './' },
+            { from: './data/*.txt', to: './', context: './src' },
         ]),
     ],
 };

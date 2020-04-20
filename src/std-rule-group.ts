@@ -4,7 +4,6 @@ import { TrieNode, TrieNodeMeta } from './trie';
 import { debugLog } from './log';
 
 export class StdRuleGroup extends BaseRuleGroup {
-
     root: TrieNode;
     regExps: RegExp[];
     subStrings: string[];
@@ -31,7 +30,6 @@ export class StdRuleGroup extends BaseRuleGroup {
         this.root.sort();
         this.subStrings.sort();
     }
-
 
     addRule(rule: string) {
         this.internalRules.push(rule);
@@ -86,9 +84,7 @@ export class StdRuleGroup extends BaseRuleGroup {
         const { hostName, protocol, url } = summary;
         let t0 = performance.now();
         let found = false;
-        if (this.useCache && this.proxyCache.has(hostName)) {
-            return this.proxyCache.get(hostName)!;
-        }
+
 
         const path = hostName.split('.').reverse();
         const meta = this.root.getMeta(path, 0);
@@ -131,10 +127,6 @@ export class StdRuleGroup extends BaseRuleGroup {
             res = types.ProxyResult.notProxy;
         } else {
             res = types.ProxyResult.proxy;
-        }
-
-        if (this.useCache) {
-            this.proxyCache.set(hostName, res);
         }
 
         let t1 = performance.now();

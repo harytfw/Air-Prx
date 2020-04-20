@@ -2,6 +2,7 @@ function notImplemented() {
     return Promise.reject("not implemented");
 }
 
+const BASE_PATH = './data';
 
 export default {
 
@@ -25,7 +26,7 @@ export default {
     },
 
     loadEmbededGFW(): Promise<string[]> {
-        return fetch(browser.runtime.getURL('./gfwlist.txt')).then(res => {
+        return fetch(browser.runtime.getURL(BASE_PATH + '/gfwlist.txt')).then(res => {
             return res.text()
         }).then(text => {
             return this.loadText(text);
@@ -42,4 +43,16 @@ export default {
         const text = localStorage.getItem('rules') as string;
         return this.loadText(text);
     },
+
+    loadChinaCIDR(): Promise<string[]> {
+        return fetch(browser.runtime.getURL(BASE_PATH + '/china-cidr.txt'))
+            .then(res => res.text())
+            .then(text => text
+                .trim()
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => !line.startsWith('#'))
+            );
+    }
+
 }

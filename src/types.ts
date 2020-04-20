@@ -15,18 +15,19 @@ export enum ProxyResult {
     continue,
 }
 
-export interface PlainGroupObject {
+export interface GroupConfig {
     name: string,
     proxyInfo: ProxyInfo,
-    internalRules: string[],
-    subSource: string,
-    subType: string,
-    useDocumentUrl: boolean,
-    useIpAddress: boolean,
+    rules: string[],
+    subSource?: string,
+    subType?: string,
+    matchType?: 'documentUrl' | 'ipAddress' | 'standard' | 'void',
+    enable?: boolean,
+    order?: number,
 }
 
 export interface Configuration {
-    groups: PlainGroupObject[],
+    groups: GroupConfig[],
     features: string[]
 }
 

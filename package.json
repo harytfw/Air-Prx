@@ -4,15 +4,22 @@
   "description": "",
   "main": "test.js",
   "dependencies": {
+    "vue": "^2.6.11",
     "web-ext": "^4.1.0"
   },
   "devDependencies": {
     "@types/firefox-webext-browser": "^70.0.1",
     "@types/node": "^13.9.5",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^8.1.0",
     "copy-webpack-plugin": "^5.1.1",
+    "less": "^3.11.1",
+    "less-loader": "^5.0.0",
     "raw-loader": "^4.0.0",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
+    "vue-loader": "^15.9.1",
+    "vue-template-compiler": "^2.6.11",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },

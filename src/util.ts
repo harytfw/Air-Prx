@@ -48,17 +48,22 @@ export function extractDomainAndProtocol(url: string) {
     return [domainName, protocol];
 }
 
-export async function synchronizeGroup(group: types.PlainGroupObject) {
+export async function synchronizeGroup(group: types.GroupConfig) {
     let rules: string[] = [];
+    debugLog('update subscription ', group);
     switch (group.subType) {
         case 'embeded-gfw':
             rules = await ruleLoader.loadEmbededGFW();
-            group.internalRules = rules;
-            debugLog('update subscription by ', group.subType);
+            break;
+        case 'embeded-china-cidr':
+            rules = await ruleLoader.loadChinaCIDR();
             break;
         default:
-            debugLog('do not support this subscription type');
+            debugLog('do not support this subscription type', group.subType);
             break;
+    }
+    if (rules.length > 0) {
+        group.rules = rules;
     }
 }
 

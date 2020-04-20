@@ -6,7 +6,7 @@ export class IpRuleGroup extends BaseRuleGroup {
 
     internalIpAddress: string[];
     ipMask: number[][];
-    constructor(name: string, proxyInfo: types.ProxyInfo, ipList) {
+    constructor(name: string, proxyInfo: types.ProxyInfo, ipList: string[]) {
         super(name, proxyInfo);
         this.internalIpAddress = [];
         this.ipMask = [];

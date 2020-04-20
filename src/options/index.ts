@@ -1,10 +1,17 @@
 
 import * as types from '../types';
-import { RuleGroup } from '../group';
 import { debugLog } from '../log';
 import { synchronizeGroup } from '../util';
 import { SchemeItem, rootScheme } from './scheme';
+import Vue from 'vue';
 
+import page from './options.vue';
+const vm = new Vue({
+    render: (h) => {
+        console.log(h);
+        return h(page)
+    }
+}).$mount('#app');
 
 const $ = document.querySelector.bind(document);
 const textarea = document.querySelector("textarea")!;
