@@ -1,7 +1,7 @@
-import * as types from './types';
+import * as types from '../types';
 import { BaseRuleGroup } from './base-rule-group';
-import { TrieNode, TrieNodeMeta } from './trie';
-import { debugLog } from './log';
+import { TrieNode, TrieNodeMeta } from '../trie';
+import { debugLog } from '../log';
 
 export class StdRuleGroup extends BaseRuleGroup {
     root: TrieNode;

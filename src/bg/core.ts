@@ -3,10 +3,11 @@ import { extractDomainAndProtocol } from '../util'
 import { debugLog } from '../log';
 import * as types from '../types';
 import { IpRuleGroup } from '../ip-rule-group';
-import { StdRuleGroup } from '../std-rule-group';
-import { BaseRuleGroup } from '../base-rule-group';
+import { StdRuleGroup } from '../group/std-rule-group';
+import { BaseRuleGroup } from '../group/base-rule-group';
 import { Cache } from '../proxy-cache';
-import { VoidRuleGroup } from '../void-rule-group';
+import { VoidRuleGroup } from '../group/void-rule-group';
+import { HostNameRuleGroup as HostNameRuleGroup } from '../group/hostname-rule-group';
 
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 
@@ -27,16 +28,6 @@ export default class Core {
         });
     }
 
-    buildRequestSummary(requestInfo) {
-        const [hostname, protocol] = extractDomainAndProtocol(requestInfo.url);
-        const summary: types.RequestSummary = {
-            url: requestInfo.url,
-            documentUrl: requestInfo.documentUrl,
-            hostName: hostname,
-            protocol: protocol,
-        }
-        return summary;
-    }
 
     computeKey(summary: types.RequestSummary) {
         return summary.hostName;
@@ -92,6 +83,8 @@ export default class Core {
             .sort(this.comparator)
             .map(g => {
                 switch (g.matchType) {
+                    case 'hostName':
+                        return new HostNameRuleGroup(g.name, g.proxyInfo);
                     case 'void':
                         return new VoidRuleGroup(g.name, g.proxyInfo);
                     case 'ipAddress':
@@ -103,4 +96,22 @@ export default class Core {
             });
         debugLog(this.groups);
     }
+
+    
+    buildRequestSummary(requestInfo) {
+        const [hostname, protocol] = extractDomainAndProtocol(requestInfo.url);
+        const [siteHostName, _] = extractDomainAndProtocol(requestInfo.documentUrl);
+        const summary: types.RequestSummary = {
+            url: requestInfo.url,
+
+            hostName: hostname,
+            protocol: protocol,
+
+            documentUrl: requestInfo.documentUrl,
+            documentHostName: siteHostName,
+        }
+        return summary;
+    }
+
 }
+

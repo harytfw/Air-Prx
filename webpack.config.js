@@ -52,8 +52,8 @@ module.exports = {
         new VueLoaderPlugin(),
         new CopyPlugin([
             { from: './src/bg/main.html', to: './bg/main.html' },
-            { from: './options/options.*(html|css)', to: './', context: './src' },
             { from: './src/manifest.json', to: './' },
+            { from: './options/options.*(html|css)', to: './', context: './src' },
             { from: './data/*.txt', to: './', context: './src' },
         ]),
     ],

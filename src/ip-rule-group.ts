@@ -1,5 +1,5 @@
 import * as types from './types';
-import { BaseRuleGroup } from './base-rule-group';
+import { BaseRuleGroup } from './group/base-rule-group';
 import { debugLog } from './log';
 import { ipToInt32 } from './util';
 export class IpRuleGroup extends BaseRuleGroup {

@@ -21,7 +21,7 @@ export interface GroupConfig {
     rules: string[],
     subSource?: string,
     subType?: string,
-    matchType?: 'documentUrl' | 'ipAddress' | 'standard' | 'void',
+    matchType?: 'documentUrl' | 'ipAddress' | 'standard' | 'hostName' | 'void',
     enable?: boolean,
     order?: number,
 }
@@ -36,6 +36,7 @@ export interface RequestSummary {
     hostName: string,
     protocol: string,
     documentUrl?: string,
+    documentHostName: string,
     ipAddress?: string,
 }
 
