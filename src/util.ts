@@ -52,10 +52,10 @@ export async function synchronizeGroup(group: types.GroupConfig) {
     let rules: string[] = [];
     debugLog('update subscription ', group);
     switch (group.subType) {
-        case 'embeded-gfw':
+        case 'builtin_gfw':
             rules = await ruleLoader.loadEmbededGFW();
             break;
-        case 'embeded-china-cidr':
+        case 'builtin_china_cidr':
             rules = await ruleLoader.loadChinaCIDR();
             break;
         default:

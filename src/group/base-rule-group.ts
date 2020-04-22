@@ -1,7 +1,7 @@
 import * as types from '../types';
 
 export class BaseRuleGroup {
-    proxyInfo: any;
+    proxyInfo: types.ProxyInfo;
     name: string;
 
     subSource: string;

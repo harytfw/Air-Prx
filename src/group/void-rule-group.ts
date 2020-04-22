@@ -5,8 +5,8 @@ export class VoidRuleGroup extends BaseRuleGroup {
         super(name, proxyInfo);
     }
 
-    getProxyResult() {
-        return this.proxyInfo;
+    getProxyResult(_) {
+        return types.ProxyResult.proxy;
     }
-    
+
 }

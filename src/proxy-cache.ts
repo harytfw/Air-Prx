@@ -169,22 +169,3 @@ export class Cache<K, T> {
         return arr;
     }
 }
-
-if (!module.parent) {
-    const random = (start, end) => {
-        return Math.floor((Math.random() * (end - start))) + start;
-    }
-    const cache = new Cache<number, string>();
-    cache.setCapacity(10);
-
-    for (let i = 0; i < 100; i++) {
-        const n = random(0, 100);
-        cache.set(n, `${n}`);
-    }
-
-    for (let i = 0; i < 100; i++) {
-        const n = random(0, 100);
-        const v = cache.get(n);
-        console.info('visit', n, "get", v, "entries", cache.entries());
-    }
-}

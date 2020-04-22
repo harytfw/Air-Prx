@@ -3,18 +3,37 @@ import * as types from '../types';
 import { debugLog } from '../log';
 import { synchronizeGroup } from '../util';
 import { SchemeItem, rootScheme } from './scheme';
-import Vue from 'vue';
 
-import page from './options.vue';
-const vm = new Vue({
-    render: (h) => {
-        console.log(h);
-        return h(page)
-    }
-}).$mount('#app');
+
+
+import CodeMirror from 'codemirror'
+import "codemirror/lib/codemirror.css";
+import 'codemirror/addon/fold/foldgutter.css';
+import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/yaml/yaml';
+import 'codemirror/addon/fold/foldcode';
+import 'codemirror/addon/fold/brace-fold';
+import 'codemirror/addon/fold/foldgutter';
+
+// import page from './options.vue';
+
+const editor = CodeMirror(document.body.querySelector('#editor')! as HTMLDivElement, {
+    mode: { name: "javascript", json: true },
+    lineNumbers: true,
+    lineWrapping: true,
+    extraKeys: { "Ctrl-Q": function (cm: any) { cm.foldCode(cm.getCursor()); } },
+    foldGutter: true,
+    gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+});
+
+// const vm = new Vue({
+//     render: (h) => {
+//         console.log(h);
+//         return h(page)
+//     }
+// }).$mount('#app');
 
 const $ = document.querySelector.bind(document);
-const textarea = document.querySelector("textarea")!;
 
 async function getConfig() {
     const storage = await browser.storage.local.get()
@@ -26,12 +45,13 @@ async function setConfig(config) {
 }
 
 async function load() {
-    textarea.value = JSON.stringify(await getConfig(), null, 2);
-    debugLog('load');
+    const json = JSON.stringify(await getConfig(), null, 2);
+    editor.setValue(json);
+    debugLog('load config');
 }
 
 async function synchronize() {
-    const config = JSON.parse(textarea.value);
+    const config = JSON.parse(editor.getValue());
     if (!Array.isArray(config.groups)) {
         return;
     }
@@ -39,18 +59,87 @@ async function synchronize() {
     for (const plainGroup of config.groups) {
         await synchronizeGroup(plainGroup);
     }
-    textarea.value = JSON.stringify(config, null, 2);
+    editor.setValue(JSON.stringify(config, null, 2));
     debugLog('after synchronize', JSON.stringify(config));
 }
 
+async function validate() {
+    let err;
+    try {
+        const obj = JSON.parse(editor.getValue());
+        addMissingProperty(obj);
+        const json = JSON.stringify(obj, null, 2);
+        editor.setValue(json);
+    } catch (ex) {
+        console.error(ex);
+        err = ex.toString();
+    }
+    showErrorMsg(err);
+}
+
 function save() {
-    setConfig(JSON.parse(textarea.value));
+    setConfig(JSON.parse(editor.getValue()));
     debugLog('save');
 }
 
 function exportFn() {
-
+    function pad(num: number) {
+        return `${num}`.padStart(2, '0');
+    }
+    const download = document.querySelector("#file-download") as HTMLAnchorElement;
+    const date = new Date();
+    download.download = `fastpac.${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDay())}-${pad(date.getHours())}-${pad(date.getMinutes())}.json`;
+    const url = window.URL.createObjectURL(new Blob([editor.getValue()], {
+        type: 'text/plain'
+    }));
+    download.href = url;
+    download.click();
+    setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+    }, 60 * 1000);
 }
+
+function showErrorMsg(err) {
+    const e = document.querySelector('#error') as HTMLElement;
+    if (!err) {
+        e.style.display = 'none';
+    } else {
+        e.style.display = 'block';
+        e.textContent = err;
+    }
+}
+
+function addMissingProperty(config: { features?: [], groups?: types.GroupConfig[] }) {
+
+    function hasProp<T>(obj: T, name: keyof T) {
+        return name in obj;
+    }
+
+    if (!hasProp(config, 'features')) {
+        config.features = [];
+    }
+    if (!hasProp(config, 'groups')) {
+        config.groups = [];
+    }
+    for (const g of config.groups!) {
+        if (!hasProp(g, 'name')) {
+            g.name = '';
+        }
+        if (!hasProp(g, 'proxyInfo')) {
+            g.proxyInfo = { type: 'direct' };
+        }
+        if (!hasProp(g, 'enable')) {
+            g.enable = true;
+        }
+        if (!hasProp(g, 'matchType')) {
+            g.matchType = 'void';
+        }
+        if (!hasProp(g, 'order')) {
+            g.order = 0;
+        }
+    }
+}
+
 
 async function buildSchemeTree() {
     function buildDetail(field: SchemeItem, summary: string, ...children: HTMLElement[]) {
@@ -199,5 +288,7 @@ async function buildSchemeTree() {
 }
 (window as any).buildSchemeTree = buildSchemeTree;
 $('#load-btn')?.addEventListener('click', load);
+$('#validate-btn')?.addEventListener('click', validate);
+$('#export-btn')?.addEventListener('click', exportFn);
 $('#save-btn')?.addEventListener('click', save);
 $('#syn-btn')?.addEventListener('click', synchronize);

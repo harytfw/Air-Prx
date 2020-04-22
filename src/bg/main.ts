@@ -37,6 +37,8 @@ function handleProxyRequest(requestInfo) {
     return p.then((proxy) => {
         debugLog(requestInfo.requestId, 'end', performance.now() - start, 'ms');
         return proxy;
+    }).catch(reason => {
+        console.error(reason);
     });
 }
 

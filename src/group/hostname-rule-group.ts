@@ -25,7 +25,7 @@ export class HostNameRuleGroup extends BaseRuleGroup {
     }
 
     getProxyResult(summary: types.RequestSummary) {
-        if (this.rules.includes(summary.documentHostName)) {
+        if (summary.documentHostName && this.rules.includes(summary.documentHostName)) {
             return types.ProxyResult.proxy;
         }
         return types.ProxyResult.continue;

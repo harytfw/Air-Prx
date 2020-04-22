@@ -1,5 +1,8 @@
 export interface ProxyInfo {
     type: string,
+
+    id?: string,
+    refId?: string,
     host?: string,
     port?: number,
     username?: string,
@@ -8,27 +11,31 @@ export interface ProxyInfo {
     proxyAuthorizationHeader?: string,
 }
 
-
 export enum ProxyResult {
     proxy,
     notProxy,
     continue,
 }
 
+export type SubType = 'builtin_china_cidr' | 'builtin_gfw' | 'cidr' | 'gfw' | 'base64_gfw' | 'autoproxy';
+export type MatchType = 'document_url' | 'ip' | 'std' | 'hostname' | 'void';
+
 export interface GroupConfig {
     name: string,
     proxyInfo: ProxyInfo,
-    rules: string[],
+    rules?: string[],
     subSource?: string,
-    subType?: string,
-    matchType?: 'documentUrl' | 'ipAddress' | 'standard' | 'hostName' | 'void',
-    enable?: boolean,
+    subType?: SubType,
+    matchType?: MatchType,
+    enable: boolean,
     order?: number,
 }
 
+export type Feature = 'use_cache' | 'ipv6' | 'log' | 'debug';
+
 export interface Configuration {
     groups: GroupConfig[],
-    features: string[]
+    features: Feature[]
 }
 
 export interface RequestSummary {
@@ -36,7 +43,7 @@ export interface RequestSummary {
     hostName: string,
     protocol: string,
     documentUrl?: string,
-    documentHostName: string,
+    documentHostName?: string,
     ipAddress?: string,
 }
 

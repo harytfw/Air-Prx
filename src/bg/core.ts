@@ -2,7 +2,7 @@
 import { extractDomainAndProtocol } from '../util'
 import { debugLog } from '../log';
 import * as types from '../types';
-import { IpRuleGroup } from '../ip-rule-group';
+import { IpRuleGroup } from '../group/ip-rule-group';
 import { StdRuleGroup } from '../group/std-rule-group';
 import { BaseRuleGroup } from '../group/base-rule-group';
 import { Cache } from '../proxy-cache';
@@ -14,9 +14,13 @@ const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 export default class Core {
 
     groups: BaseRuleGroup[];
+    proxyInfoMap: Map<string, types.ProxyInfo>;
+    useCache: boolean;
     cache: Cache<string, types.ProxyInfo>;
     constructor() {
         this.groups = [];
+        this.proxyInfoMap = new Map();
+        this.useCache = true;
         this.cache = new Cache();
     }
 
@@ -28,9 +32,25 @@ export default class Core {
         });
     }
 
+    disableCache() {
+        this.useCache = false;
+        this.cache.clear();
+    }
+
+    enableCache() {
+        this.useCache = true;
+    }
 
     computeKey(summary: types.RequestSummary) {
         return summary.hostName;
+    }
+
+    resolveProxyInfo(proxyInfo: types.ProxyInfo): types.ProxyInfo {
+        const id = proxyInfo.refId;
+        if (typeof id === 'string' && this.proxyInfoMap.has(id)) {
+            return this.proxyInfoMap.get(id)!;
+        }
+        return proxyInfo;
     }
 
     async fillIpAddress(summary: types.RequestSummary) {
@@ -54,12 +74,12 @@ export default class Core {
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
                 debugLog(summary.url, 'use', g.proxyInfo);
-                pInfo = g.proxyInfo;
+                pInfo = this.resolveProxyInfo(g.proxyInfo);
                 break;
             }
             if (result === types.ProxyResult.notProxy) {
                 debugLog(summary.url, 'not use proxy');
-                pInfo = DIRECT_PROXYINFO;
+                pInfo = this.resolveProxyInfo(DIRECT_PROXYINFO);
                 break;
             }
         }
@@ -67,7 +87,9 @@ export default class Core {
             debugLog(summary, 'did not match rule , not proxy is used');
             pInfo = DIRECT_PROXYINFO;
         }
-        this.cache.set(key, pInfo);
+        if (this.useCache) {
+            this.cache.set(key, pInfo);
+        }
         return Promise.resolve(pInfo);
     }
 
@@ -78,29 +100,38 @@ export default class Core {
     }
 
     fromConfig(config: types.Configuration) {
+        config.groups.map(g => g.proxyInfo)
+            .filter(item => typeof item.id === 'string')
+            .forEach(item => {
+                this.proxyInfoMap.set(item.id!, item);
+            })
+
         this.groups = config.groups
             .filter(g => g.enable)
             .sort(this.comparator)
             .map(g => {
                 switch (g.matchType) {
-                    case 'hostName':
+                    case 'hostname':
                         return new HostNameRuleGroup(g.name, g.proxyInfo);
                     case 'void':
                         return new VoidRuleGroup(g.name, g.proxyInfo);
-                    case 'ipAddress':
-                        return new IpRuleGroup(g.name, g.proxyInfo, g.rules);
-                    case 'standard':
+                    case 'ip':
+                        return new IpRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []);
+                    case 'std':
                     default:
-                        return new StdRuleGroup(g.name, g.proxyInfo, g.rules);
+                        return new StdRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []);
                 }
             });
         debugLog(this.groups);
     }
 
-    
+
     buildRequestSummary(requestInfo) {
         const [hostname, protocol] = extractDomainAndProtocol(requestInfo.url);
-        const [siteHostName, _] = extractDomainAndProtocol(requestInfo.documentUrl);
+        let siteHostName;
+        if (requestInfo.documentUrl) {
+            siteHostName = extractDomainAndProtocol(requestInfo.documentUrl)[0];
+        }
         const summary: types.RequestSummary = {
             url: requestInfo.url,
 
