@@ -12,6 +12,7 @@
     "@types/node": "^13.9.5",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.2",
+    "style-loader": "^1.1.4",
     "less": "^3.11.1",
     "less-loader": "^5.0.0",
     "raw-loader": "^4.0.0",

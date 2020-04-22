@@ -6,7 +6,7 @@ module.exports = {
         'options/index': './src/options/index.ts',
     },
     target: 'node',
-    mode: "development",
+    mode: "production",
     devtool: 'source-map',
     output: {
         filename: '[name].js',
@@ -22,6 +22,7 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
+                    'style-loader',
                     'css-loader'
                 ]
             },

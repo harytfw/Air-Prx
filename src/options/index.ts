@@ -1,10 +1,4 @@
 
-import * as types from '../types';
-import { debugLog } from '../log';
-import { synchronizeGroup } from '../util';
-import { SchemeItem, rootScheme } from './scheme';
-
-
 
 import CodeMirror from 'codemirror'
 import "codemirror/lib/codemirror.css";
@@ -14,6 +8,13 @@ import 'codemirror/mode/yaml/yaml';
 import 'codemirror/addon/fold/foldcode';
 import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/foldgutter';
+
+
+import * as types from '../types';
+import { debugLog } from '../log';
+import { synchronizeGroup } from '../util';
+import { SchemeItem, rootScheme } from './scheme';
+
 
 // import page from './options.vue';
 

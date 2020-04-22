@@ -2,12 +2,8 @@
 import { extractDomainAndProtocol } from '../util'
 import { debugLog } from '../log';
 import * as types from '../types';
-import { IpRuleGroup } from '../group/ip-rule-group';
-import { StdRuleGroup } from '../group/std-rule-group';
-import { BaseRuleGroup } from '../group/base-rule-group';
 import { Cache } from '../proxy-cache';
-import { VoidRuleGroup } from '../group/void-rule-group';
-import { HostNameRuleGroup as HostNameRuleGroup } from '../group/hostname-rule-group';
+import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../group'
 
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 
