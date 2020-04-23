@@ -1,13 +1,14 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 module.exports = {
     entry: {
         'bg/main': './src/bg/main.ts',
         'options/index': './src/options/index.ts',
     },
     target: 'node',
-    mode: "production",
-    devtool: 'source-map',
+    mode: "development",
+    devtool: false,
     output: {
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
@@ -39,6 +40,7 @@ module.exports = {
         extensions: ['.ts', '.js'],
     },
     plugins: [
+
         new CopyPlugin([
             { from: './src/bg/main.html', to: './bg/main.html' },
             { from: './src/manifest.json', to: './' },

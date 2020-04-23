@@ -1,8 +1,6 @@
 import Core from './core'
 import ruleLoader from '../rule-loader';
-import config from '../webext/config';
-import { debugLog } from '../log';
-import { extractDomainAndProtocol } from '../util';
+import { extractDomainAndProtocol, debugLog } from '../util';
 import * as types from '../types';
 
 let core: Core | null = null;

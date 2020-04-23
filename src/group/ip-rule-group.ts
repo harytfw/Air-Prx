@@ -1,11 +1,10 @@
 import * as types from '../types';
 import { BaseRuleGroup } from './base-rule-group';
-import { debugLog } from '../log';
-import { ipToInt32 } from '../util';
+import { ipToInt32, debugLog, toCIDR } from '../util';
 export class IpRuleGroup extends BaseRuleGroup {
 
     internalIpAddress: string[];
-    ipMask: number[][];
+    ipMask: types.CIDR[];
     constructor(name: string, proxyInfo: types.ProxyInfo, ipList: string[]) {
         super(name, proxyInfo);
         this.internalIpAddress = [];
@@ -15,15 +14,10 @@ export class IpRuleGroup extends BaseRuleGroup {
         }
     }
 
-    addIpAddress(ipAddrWithMask: string) {
-        let int32Ip = ipToInt32(ipAddrWithMask.substring(0, ipAddrWithMask.lastIndexOf('/')));
-        const maskLen = parseInt(ipAddrWithMask.substring(ipAddrWithMask.lastIndexOf('/') + 1));
-        let mask = 0;
-        for (let i = 31, len = maskLen; i >= 0 && len > 0; i--, len--) {
-            mask = 1 << i | mask;
-        }
-        debugLog('addIpAddress', ipAddrWithMask, int32Ip, maskLen, mask)
-        this.ipMask.push([int32Ip, mask]);
+    addIpAddress(strCidr: string) {
+        const cidr = toCIDR(strCidr);
+        //debugLog('addIpAddress', strCidr)
+        this.ipMask.push(cidr);
     }
 
     getProxyResult(summary: types.RequestSummary) {

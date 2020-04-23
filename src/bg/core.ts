@@ -1,10 +1,11 @@
 
-import { extractDomainAndProtocol } from '../util'
-import { debugLog } from '../log';
+import { extractDomainAndProtocol, ipToInt32, debugLog } from '../util'
 import * as types from '../types';
 import { Cache } from '../proxy-cache';
 import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../group'
 import { PersistedLogger } from '../persisted-logger';
+import { threadId } from 'worker_threads';
+import { MyIpMatcher } from '../myip-matcher';
 
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 
@@ -17,6 +18,10 @@ export default class Core {
     persistedLogger: PersistedLogger;
     features: Set<types.Feature>;
 
+    myIpMatcher?: MyIpMatcher;
+
+    tempDisable: boolean;
+
     constructor() {
         this.groups = [];
         this.proxyInfoMap = new Map();
@@ -24,6 +29,7 @@ export default class Core {
         this.cache = new Cache();
         this.persistedLogger = new PersistedLogger('log');
         this.features = new Set();
+        this.tempDisable = true;
     }
 
     sortAll() {
@@ -67,11 +73,22 @@ export default class Core {
     }
 
     async getProxy(requestInfo): Promise<types.ProxyInfo> {
+        if (this.tempDisable) {
+            debugLog('temporary disable proxy');
+            return Promise.resolve(DIRECT_PROXYINFO);
+        }
+
+        if (this.myIpMatcher && !this.myIpMatcher.isAllow()) {
+            debugLog('current ip is not allowed to use proxy');
+            return Promise.resolve(DIRECT_PROXYINFO);
+        }
+
+        // debugLog(requestInfo);
         this.pLog('start getProxy process');
         this.pLog(requestInfo);
 
         const summary = this.buildRequestSummary(requestInfo);
-
+        debugLog(JSON.stringify(summary));
         this.pLog('summary: ')
         this.pLog(summary);
 
@@ -130,8 +147,11 @@ export default class Core {
     }
 
     fromConfig(config: types.Configuration) {
-        config.features.forEach(f => this.features.add(f));
+        debugLog(config);
+        this.tempDisable = true;
         this.pLog('load from configuration');
+        config.features.forEach(f => this.features.add(f));
+        this.pLog('features: ' + config.features);
 
         for (const g of config.groups) {
             this.pLog('detect group: ' + g.name);
@@ -170,6 +190,21 @@ export default class Core {
                 }
             });
         debugLog(this.groups);
+
+        if (this.features.has('limit_my_ip')) {
+            const myIpList = config.myIpList ? config.myIpList : []
+            if (typeof config.myIp === 'string') {
+                this.myIpMatcher = new MyIpMatcher(myIpList, ipToInt32(config.myIp));
+                this.tempDisable = false;
+            } else {
+                this.myIpMatcher = new MyIpMatcher(myIpList, 0);
+                this.myIpMatcher.updateMyIp().then(() => {
+                    this.tempDisable = false;
+                })
+            }
+        } else {
+            this.tempDisable = false;
+        }
     }
 
 
@@ -190,6 +225,8 @@ export default class Core {
         }
         return summary;
     }
+
+
 
 }
 

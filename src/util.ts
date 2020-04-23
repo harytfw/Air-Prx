@@ -1,6 +1,5 @@
 import * as types from "./types";
 import ruleLoader from "./rule-loader";
-import { debugLog } from "./log";
 
 export function lowerBound(array: string[], start: number, end: number, i: number, target: string, j: number) {
     if (start >= end) {
@@ -67,8 +66,31 @@ export async function synchronizeGroup(group: types.GroupConfig) {
     }
 }
 
-export function ipToInt32(ip: string) {
+export function ipToInt32(ip: string): number {
     let ipArr = ip.split('.').map(a => parseInt(a));
     let int32 = ipArr[0] << 24 | ipArr[1] << 16 | ipArr[2] << 8 | ipArr[3];
     return int32;
+}
+
+export function toCIDR(strCidr: string): types.CIDR {
+    let int32Ip = ipToInt32(strCidr.substring(0, strCidr.lastIndexOf('/')));
+    const maskLen = parseInt(strCidr.substring(strCidr.lastIndexOf('/') + 1));
+    let mask = 0;
+    for (let i = 31, len = maskLen; i >= 0 && len > 0; i--, len--) {
+        mask = 1 << i | mask;
+    }
+
+    return [int32Ip, mask];
+}
+
+export function isCidrMatch(cidr: types.CIDR, ip: number) {
+    return (ip & cidr[1]) === cidr[0];
+}
+
+
+
+export function debugLog(...args) {
+    if ((window as any).debug === true) {
+        console.debug(...args);
+    }
 }

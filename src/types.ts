@@ -1,3 +1,5 @@
+export type CIDR = [number, number];
+
 export interface ProxyInfo {
     type: string,
 
@@ -18,24 +20,27 @@ export enum ProxyResult {
 }
 
 export type SubType = 'builtin_china_cidr' | 'builtin_gfw' | 'cidr' | 'gfw' | 'base64_gfw' | 'autoproxy';
-export type MatchType = 'document_url' | 'ip' | 'std' | 'hostname' | 'void';
+export type MatchType = 'document_url' | 'ip' | 'std' | 'hostname' | 'void' | 'context';
 
 export interface GroupConfig {
     name: string,
+    enable: boolean,
     proxyInfo: ProxyInfo,
+    contextName?: string, //TODO: cookieStoreId
     rules?: string[],
     subSource?: string,
     subType?: SubType,
     matchType?: MatchType,
-    enable: boolean,
     order?: number,
 }
 
-export type Feature = 'use_cache' | 'ipv6' | 'log' | 'debug';
+export type Feature = 'chromium' | 'cache' | 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
 
 export interface Configuration {
-    groups: GroupConfig[],
     features: Feature[]
+    groups: GroupConfig[],
+    myIp?: string;
+    myIpList?: string[],
 }
 
 export interface RequestSummary {
@@ -48,7 +53,6 @@ export interface RequestSummary {
 }
 
 export type Cache = Map<string, ProxyResult>;
-
 
 export const HTTP = 'http://';
 export const HTTPS = 'https://';
