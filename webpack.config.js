@@ -8,8 +8,8 @@ module.exports = {
         'pac/pac': './src/pac/pac.ts',
     },
     target: 'node',
-    mode: "development",
-    devtool: false,
+    mode: 'development',
+    devtool: 'source-map',
     output: {
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
@@ -20,7 +20,6 @@ module.exports = {
                 test: /\.ts$/,
                 loader: 'ts-loader',
             },
-
             {
                 test: /\.css$/,
                 use: [

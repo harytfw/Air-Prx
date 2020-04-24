@@ -1,6 +1,8 @@
 import * as types from "./types";
 import ruleLoader from "./rule-loader";
 
+import stringify from 'stringify-object';
+
 export function lowerBound(array: string[], start: number, end: number, i: number, target: string, j: number) {
     if (start >= end) {
         return -1;
@@ -93,8 +95,8 @@ export function debugLog(...args) {
     if (typeof window === 'object' && (window as any).debug === true) {
         console.debug(...args);
     }
-    if (typeof window === 'undefined') {
-        alert(args.map(item => item.toString()).join(','));
+    if (typeof window === 'undefined') { // PAC
+        alert(stringify(args))
     }
 }
 

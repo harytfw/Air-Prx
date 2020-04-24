@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
-    "browserify": "^16.5.1",
     "codemirror": "^5.53.2",
-    "tsify": "^4.0.1",
-    "watchify": "^3.11.1",
+    "stringify-object": "^3.3.0",
     "web-ext": "^4.1.0"
   },
   "devDependencies": {
@@ -26,7 +24,10 @@
     "webpack-cli": "^3.3.11"
   },
   "scripts": {
-    "build": "webpack && web-ext build --source-dir=./dist --overwrite-dest",
+    "build": "webpack --mode=production && npm run web-ext-build",
+    "build-dev": "webpack --mode=development && npm run web-ext-build",
+    "web-ext-build": "web-ext build --source-dir=./dist --overwrite-dest",
+    "watch": "webpack --watch",
     "start:firefox": "web-ext run --source-dir=./dist/"
   },
   "author": "",
