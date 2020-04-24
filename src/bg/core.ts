@@ -60,12 +60,6 @@ export default class Core {
         return proxyInfo;
     }
 
-    pLog(obj: any) {
-        if (this.features.has('log')) {
-            console.log(obj);
-        }
-    }
-
     async fillIpAddress(summary: types.RequestSummary) {
         if (typeof summary.ipAddress !== 'string') {
             const record = await browser.dns.resolve(summary.hostName);
@@ -85,51 +79,43 @@ export default class Core {
         }
 
         // debugLog(requestInfo);
-        this.pLog('start getProxy process');
-        this.pLog(requestInfo);
 
         const summary = this.buildRequestSummary(requestInfo);
-        debugLog(JSON.stringify(summary));
-        this.pLog('summary: ')
-        this.pLog(summary);
+        debugLog('summary: ')
 
         const key = this.computeKey(summary);
         let pInfo: types.ProxyInfo | null = null;
         if (this.cache.has(key)) {
             pInfo = this.cache.get(key)!;
             debugLog('hit cache', key, pInfo);
-            this.pLog('hit cache, key: ' + key);
-            this.pLog(pInfo);
             return Promise.resolve(pInfo);
         }
-        this.pLog('start check group');
         for (const g of this.groups) {
-            this.pLog(`check group, name:${g.name}, prototype: ${Object.getPrototypeOf(g)}`);
-            this.pLog('proxy info: ')
-            this.pLog(g.proxyInfo);
+            debugLog(`check group, name:${g.name}, prototype: ${Object.getPrototypeOf(g)}`);
+            debugLog('proxy info: ')
+            debugLog(g.proxyInfo);
             if (g instanceof IpRuleGroup) {
-                this.pLog('start feach dns');
+                debugLog('start feach dns');
                 await this.fillIpAddress(summary);
-                this.pLog('fetch dns done');
-                this.pLog(summary);
+                debugLog('fetch dns done');
+                debugLog(summary);
             }
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
-                this.pLog('proxy result: PROXY')
+                debugLog('proxy result: PROXY')
                 pInfo = this.resolveProxyInfo(g.proxyInfo);
                 break;
             } else if (result === types.ProxyResult.notProxy) {
-                this.pLog('proxy result: NOT PROXY');
+                debugLog('proxy result: NOT PROXY');
                 pInfo = this.resolveProxyInfo(DIRECT_PROXYINFO);
                 break;
             } else if (result === types.ProxyResult.continue) {
-                this.pLog('proxy result: CONTINUE');
+                debugLog('proxy result: CONTINUE');
             }
         }
-        this.pLog('end check group');
 
         if (pInfo === null) {
-            this.pLog(`didn't match any group, use DIRECT`)
+            debugLog(`didn't match any group, use DIRECT`)
             pInfo = DIRECT_PROXYINFO;
         }
 
@@ -137,7 +123,7 @@ export default class Core {
             this.cache.set(key, pInfo);
         }
 
-        this.pLog('end process');
+        debugLog('end process');
         return Promise.resolve(pInfo);
     }
 
@@ -152,33 +138,33 @@ export default class Core {
         this.proxyInfoMap.clear();
         // debugLog(config);
         this.tempDisable = true;
-        this.pLog('load from configuration');
+        debugLog('load from configuration');
         config.features.forEach(f => this.features.add(f));
-        this.pLog('features: ' + config.features);
+        debugLog('features: ' + config.features);
         for (const g of config.groups) {
-            this.pLog('detect group: ' + g.name);
-            this.pLog('enable: ' + g.enable);
-            this.pLog('order: ' + g.order);
-            this.pLog('subSource: ' + g.subSource)
-            this.pLog('subType: ' + g.subType)
-            this.pLog('matchType: ' + g.matchType)
-            this.pLog('proxy.type: ' + g.proxyInfo.type);
-            this.pLog('rules length: ' + g.rules?.length);
+            debugLog('detect group: ' + g.name);
+            debugLog('enable: ' + g.enable);
+            debugLog('order: ' + g.order);
+            debugLog('subSource: ' + g.subSource)
+            debugLog('subType: ' + g.subType)
+            debugLog('matchType: ' + g.matchType)
+            debugLog('proxy.type: ' + g.proxyInfo.type);
+            debugLog('rules length: ' + g.rules?.length);
         }
 
-        this.pLog('init proxyInfoMap');
+        debugLog('init proxyInfoMap');
         config.groups.map(g => g.proxyInfo)
             .filter(item => typeof item.id === 'string')
             .forEach(item => {
                 this.proxyInfoMap.set(item.id!, item);
             })
 
-        this.pLog('process groups');
+        debugLog('process groups');
         const gs = config.groups
             // .filter(g => g.enable)
             // .sort(this.comparator)
             .map(g => {
-                // this.pLog(`init group: ${g.name} , matchType: ${g.matchType}`);
+                // debugLog(`init group: ${g.name} , matchType: ${g.matchType}`);
                 switch (g.matchType) {
                     case 'hostname':
                         return new HostNameRuleGroup(g.name, g.proxyInfo);

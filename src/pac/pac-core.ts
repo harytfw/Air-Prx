@@ -26,9 +26,9 @@ export class PacCore extends Core {
 
     fillIpAddress_PAC(summary: types.RequestSummary) {
         if (summary.ipAddress === undefined) {
-            // this.pLog('start resolve ip');
+            // debugLog('start resolve ip');
             summary.ipAddress = dnsResolve(summary.hostName);
-            // this.pLog(summary.ipAddress);
+            // debugLog(summary.ipAddress);
         }
     }
 
@@ -43,46 +43,46 @@ export class PacCore extends Core {
         // if (this.myIpMatcher && !this.myIpMatcher.isAllow()) {
         //     return DIRECT_PROXYINFO;
         // }
-        // this.pLog('start getProxy process');
-        // this.pLog('summary: ')
-        // this.pLog(summary);
+        // debugLog('start getProxy process');
+        // debugLog('summary: ')
+        // debugLog(summary);
         const key = this.computeKey(summary);
         let pInfo: types.ProxyInfo | null = null;
 
         if (this.cache.has(key)) {
             pInfo = this.cache.get(key)!;
             debugLog('hit cache', key, pInfo);
-            this.pLog('hit cache, key: ' + key);
-            this.pLog(pInfo);
+            debugLog('hit cache, key: ' + key);
+            debugLog(pInfo);
             return pInfo;
         }
-        this.pLog('start check group');
+        debugLog('start check group');
         for (let i = 0; i < this.groups.length; i++) {
             const g = this.groups[i];
-            // this.pLog(`check group, name:${g.name}, prototype: ${Object.getPrototypeOf(g)}`);
-            // this.pLog('proxy info: ')
-            // this.pLog(g.proxyInfo);
+            // debugLog(`check group, name:${g.name}, prototype: ${Object.getPrototypeOf(g)}`);
+            // debugLog('proxy info: ')
+            // debugLog(g.proxyInfo);
             if (g instanceof IpRuleGroup) {
                 this.fillIpAddress_PAC(summary);
             }
 
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
-                this.pLog('proxy result: PROXY')
+                debugLog('proxy result: PROXY')
                 pInfo = this.resolveProxyInfo(g.proxyInfo);
                 break;
             } else if (result === types.ProxyResult.notProxy) {
-                this.pLog('proxy result: NOT PROXY');
+                debugLog('proxy result: NOT PROXY');
                 pInfo = this.resolveProxyInfo(DIRECT_PROXYINFO);
                 break;
             } else if (result === types.ProxyResult.continue) {
-                this.pLog('proxy result: CONTINUE');
+                debugLog('proxy result: CONTINUE');
             }
         }
 
-        this.pLog('end check group');
+        debugLog('end check group');
         if (pInfo === null) {
-            this.pLog(`didn't match any group, use DIRECT`)
+            debugLog(`didn't match any group, use DIRECT`)
             pInfo = DIRECT_PROXYINFO;
         }
 
@@ -90,7 +90,7 @@ export class PacCore extends Core {
             this.cache.set(key, pInfo);
         }
 
-        this.pLog('end process');
+        debugLog('end process');
         return pInfo;
     }
 

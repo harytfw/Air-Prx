@@ -17,47 +17,52 @@ class Entry<K, T> {
     }
 }
 
-const factor = 0.75;
-
+const DEFAULT_FACTOR = 0.75;
+const MIN_CAP = 10;
 export class Cache<K, T> {
     private capacity: number;
     private map: Map<K, Entry<K, T>>;
     private head: Entry<K, T> | null;
+    private tail: Entry<K, T> | null;
+    private factor: number;
 
     constructor() {
         this.capacity = 1000;
         this.map = new Map();
         this.head = null;
+        this.tail = null;
+        this.factor = DEFAULT_FACTOR;
     }
 
     setCapacity(cap: number) {
-        this.capacity = Math.max(cap, 20);
+        if (cap < MIN_CAP) {
+            console.warn('use mininum capacity', MIN_CAP);
+        }
+        this.capacity = Math.max(cap, MIN_CAP);
         this.attemptRemoveEntries();
     }
 
-    attemptRemoveEntries() {
-        if (this.map.size >= this.capacity) {
-            const allowSize = Math.floor(this.capacity * factor);
-            let cnt = 0;
-            let entry = this.head;
-            let arr: any = [];
-            while (entry !== null && cnt < allowSize) {
-                entry = entry.next;
-                arr.push([entry?.key, entry?.value]);
-                cnt += 1;
-            }
-            if (entry !== null && entry.prev !== null) {
-                entry.prev.next = null;
-            }
-            while (entry !== null) {
-                const key = entry.key;
-                const tmp = entry.next;
-                entry.next = null;
-                entry.prev = null;
-                this.map.delete(key);
-                entry = tmp;
-            }
+    setFactor(factor: number) {
+        if (factor > 1 || factor < 0) {
+            throw new Error('incorrect factor argument');
+        }
+        this.factor = Math.min(1, Math.max(0, factor));
+    }
 
+    attemptRemoveEntries() {
+        if (this.size > this.capacity) {
+            const allowSize = Math.floor(this.capacity * this.factor);
+            let cursor = this.tail;
+            let deleteCnt = this.size - allowSize;
+            while (cursor !== null && deleteCnt > 0) {
+                this.map.delete(cursor.key);
+                const p = cursor.prev;
+                cursor.prev = cursor.next = null;//Improve GC
+                cursor = cursor.prev;
+                deleteCnt -= 1;
+            }
+            cursor!.next = null;
+            this.tail = cursor;
         }
     }
 
@@ -70,11 +75,14 @@ export class Cache<K, T> {
         if (entry === undefined) {
             return null;
         }
-        let value = entry.value;
-        this.detach(entry);
-        this.linkToHead(entry);
-        this.attemptRemoveEntries()
-        return value
+        if (this.head !== null && this.head === entry) {
+            return entry.value;
+        } else {
+            this.detach(entry);
+            this.linkToHead(entry);
+            this.attemptRemoveEntries()
+            return entry.value;
+        }
     }
 
     set(key: K, value: T) {
@@ -94,31 +102,36 @@ export class Cache<K, T> {
 
     private detach(entry: Entry<K, T>) {
         if (this.head === null) {
-            entry.next = entry.prev = null;
             return;
-        } else if (this.head === entry) {
-            this.head = entry.next;
-            entry.next = entry.prev = null;
-            return;
-        } else {
-            if (!entry.hasPrev()) {
-                console.trace(`previous entry didn't exist`);
-            }
-            const prevEntry = entry.prev!;
-            if (entry.hasNext()) {
-                const nextEntry = entry.next!;
-                nextEntry.prev = prevEntry;
-                prevEntry.next = nextEntry;
-            } else {
-                prevEntry.next = null;
-            }
-            entry.next = entry.prev = null;
         }
+
+        if (this.head === entry) {
+            this.head = entry.next;
+            return;
+        }
+
+        if (this.tail === entry) {
+            this.tail = entry.prev;
+        }
+
+        if (!entry.hasPrev()) {
+            console.trace(`previous entry didn't exist`);
+        }
+
+        const prevEntry = entry.prev!;
+        if (entry.hasNext()) {
+            const nextEntry = entry.next!;
+            nextEntry.prev = prevEntry;
+            prevEntry.next = nextEntry;
+        } else {
+            prevEntry.next = null;
+        }
+        entry.next = entry.prev = null;
     }
 
     private linkToHead(entry: Entry<K, T>) {
         if (this.head === null) {
-            this.head = entry;
+            this.head = this.tail = entry;
             return;
         }
         if (entry.hasPrev() || entry.hasNext()) {
@@ -150,7 +163,7 @@ export class Cache<K, T> {
         }
         return arr;
     }
-    key() {
+    keys() {
         const arr: K[] = [];
         let h = this.head;
         while (h !== null) {
@@ -167,5 +180,17 @@ export class Cache<K, T> {
             h = h.next;
         }
         return arr;
+    }
+
+    getHead() {
+        return this.head;
+    }
+
+    getTail() {
+        return this.tail;
+    }
+
+    get size() {
+        return this.map.size;
     }
 }
