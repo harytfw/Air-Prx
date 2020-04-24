@@ -149,33 +149,31 @@ export default class Core {
 
     fromConfig(config: types.Configuration) {
 
-        // this.proxyInfoMap.clear();
-        // // debugLog(config);
-        // this.tempDisable = true;
-        // this.pLog('load from configuration');
-        // config.features.forEach(f => this.features.add(f));
-        // this.pLog('features: ' + config.features);
-        // for (const g of config.groups) {
-        //     this.pLog('detect group: ' + g.name);
-        //     this.pLog('enable: ' + g.enable);
-        //     this.pLog('order: ' + g.order);
-        //     this.pLog('subSource: ' + g.subSource)
-        //     this.pLog('subType: ' + g.subType)
-        //     this.pLog('matchType: ' + g.matchType)
-        //     this.pLog('proxy.type: ' + g.proxyInfo.type);
-        //     this.pLog('rules length: ' + g.rules?.length);
-        // }
+        this.proxyInfoMap.clear();
+        // debugLog(config);
+        this.tempDisable = true;
+        this.pLog('load from configuration');
+        config.features.forEach(f => this.features.add(f));
+        this.pLog('features: ' + config.features);
+        for (const g of config.groups) {
+            this.pLog('detect group: ' + g.name);
+            this.pLog('enable: ' + g.enable);
+            this.pLog('order: ' + g.order);
+            this.pLog('subSource: ' + g.subSource)
+            this.pLog('subType: ' + g.subType)
+            this.pLog('matchType: ' + g.matchType)
+            this.pLog('proxy.type: ' + g.proxyInfo.type);
+            this.pLog('rules length: ' + g.rules?.length);
+        }
 
-        // this.pLog('init proxyInfoMap');
-        // config.groups.map(g => g.proxyInfo)
-        //     .filter(item => typeof item.id === 'string')
-        //     .forEach(item => {
-        //         this.proxyInfoMap.set(item.id!, item);
-        //     })
+        this.pLog('init proxyInfoMap');
+        config.groups.map(g => g.proxyInfo)
+            .filter(item => typeof item.id === 'string')
+            .forEach(item => {
+                this.proxyInfoMap.set(item.id!, item);
+            })
 
-        // this.pLog('process groups');
-        // this.groups = [new VoidRuleGroup('void', types.TEST_PROXY)];
-        // return;
+        this.pLog('process groups');
         const gs = config.groups
             // .filter(g => g.enable)
             // .sort(this.comparator)
@@ -194,22 +192,22 @@ export default class Core {
                 }
             });
         this.groups.push(...gs);
-        // debugLog(this.groups);
+        debugLog(this.groups);
 
-        // if (this.features.has('limit_my_ip')) {
-        //     const myIpList = config.myIpList ? config.myIpList : []
-        //     if (typeof config.myIp === 'string') {
-        //         this.myIpMatcher = new MyIpMatcher(myIpList, ipToInt32(config.myIp));
-        //         this.tempDisable = false;
-        //     } else {
-        //         this.myIpMatcher = new MyIpMatcher(myIpList, 0);
-        //         this.myIpMatcher.updateMyIp().then(() => {
-        //             this.tempDisable = false;
-        //         })
-        //     }
-        // } else {
-        //     this.tempDisable = false;
-        // }
+        if (this.features.has('limit_my_ip')) {
+            const myIpList = config.myIpList ? config.myIpList : []
+            if (typeof config.myIp === 'string') {
+                this.myIpMatcher = new MyIpMatcher(myIpList, ipToInt32(config.myIp));
+                this.tempDisable = false;
+            } else {
+                this.myIpMatcher = new MyIpMatcher(myIpList, 0);
+                this.myIpMatcher.updateMyIp().then(() => {
+                    this.tempDisable = false;
+                })
+            }
+        } else {
+            this.tempDisable = false;
+        }
     }
 
 

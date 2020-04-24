@@ -90,7 +90,6 @@ export function isCidrMatch(cidr: types.CIDR, ip: number) {
 
 
 export function debugLog(...args) {
-    return;
     if (typeof window === 'object' && (window as any).debug === true) {
         console.debug(...args);
     }

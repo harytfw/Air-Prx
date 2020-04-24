@@ -1,8 +1,9 @@
+
 import './pac-types';
-import { debugLog, extractDomainAndProtocol } from '../src/util'
-import * as types from '../src/types';
-import Core from '../src/bg/core'
-import { IpRuleGroup, VoidRuleGroup } from '../src/group';
+import Core from "../bg/core";
+import { debugLog, extractDomainAndProtocol } from '../util'
+import { IpRuleGroup, VoidRuleGroup } from '../group';
+import * as types from '../types';
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 const TEST_PROXY: types.ProxyInfo = {
     type: 'http',
@@ -10,14 +11,12 @@ const TEST_PROXY: types.ProxyInfo = {
     port: 1081,
 }
 
-
-class PacCore extends Core {
+export class PacCore extends Core {
     constructor() {
         super();
     }
 
     pLog(arg) {
-        return;
         if (typeof arg !== 'string') {
             alert(JSON.stringify(arg));
         } else {
@@ -57,15 +56,12 @@ class PacCore extends Core {
             this.pLog(pInfo);
             return pInfo;
         }
-        // return TEST_PROXY;
-        // this.groups = [new VoidRuleGroup('void', TEST_PROXY)]
         this.pLog('start check group');
         for (let i = 0; i < this.groups.length; i++) {
             const g = this.groups[i];
             // this.pLog(`check group, name:${g.name}, prototype: ${Object.getPrototypeOf(g)}`);
             // this.pLog('proxy info: ')
             // this.pLog(g.proxyInfo);
-            return TEST_PROXY;
             if (g instanceof IpRuleGroup) {
                 this.fillIpAddress_PAC(summary);
             }
@@ -99,81 +95,3 @@ class PacCore extends Core {
     }
 
 }
-
-let core: PacCore | null = null;
-
-function init() {
-    //START_REPLACE
-    let config = types.BLANK_CONFIG;
-    //END_REPLACE
-    /*
-    config = {
-        "features": [
-        ],
-        "groups": [
-            {
-                "name": "first-void",
-                "proxyInfo": {
-                    "type": "http",
-                    "host": "127.0.0.1",
-                    "port": 1081
-                },
-                "order": -1,
-                "matchType": "void",
-                "subSource": "",
-                "enable": true
-            },
-            {
-                "name": "void",
-                "proxyInfo": {
-                    "type": "http",
-                    "host": "127.0.0.1",
-                    "port": 1081
-                },
-                "order": 1,
-                "matchType": "void",
-                "subSource": "",
-                "enable": true
-            }
-        ],
-        "myIpList": [
-            "116.16.0.0/12"
-        ]
-    }*/
-    core = new PacCore();
-    core.fromConfig(config);
-}
-
-
-function formateProxyInfo(proxyInfo: types.ProxyInfo) {
-    if (proxyInfo.type === 'direct') {
-        return 'DIRECT';
-    }
-    const detail = `${proxyInfo.host}:${proxyInfo.port}`;
-    if (proxyInfo.type === 'http') {
-        return `PROXY ${detail}`;
-    }
-    if (proxyInfo.type === 'https') {
-        return `PROXY ${detail}`
-    }
-    if (proxyInfo.type === 'socks5') {
-        return `SOCKS5 ${detail}`
-    }
-    return 'DIRECT'
-}
-
-function FindProxyForURL(url: string, host: string): string {
-    // return 'PROXY 127.0.0.1:1081';
-    if (!core) {
-        return 'DIRECT';
-    }
-    const [_, protocol] = extractDomainAndProtocol(url);
-    const proxyInfo = core!.getProxy_PAC(url, host);
-    const formated = formateProxyInfo(proxyInfo);
-    // alert(formated);
-    return formated;
-}
-
-
-globalThis.FindProxyForURL = FindProxyForURL;
-init();

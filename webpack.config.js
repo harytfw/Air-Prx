@@ -5,6 +5,7 @@ module.exports = {
     entry: {
         'bg/main': './src/bg/main.ts',
         'options/index': './src/options/index.ts',
+        'pac/pac': './src/pac/pac.ts',
     },
     target: 'node',
     mode: "development",

@@ -10,6 +10,7 @@ import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/foldgutter';
 
 
+import browser from 'webextension-polyfill/dist/browser-polyfill.js';
 import * as types from '../types';
 import { synchronizeGroup, debugLog } from '../util';
 
