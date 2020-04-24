@@ -21,10 +21,11 @@ export class IpRuleGroup extends BaseRuleGroup {
     }
 
     getProxyResult(summary: types.RequestSummary) {
+        return types.ProxyResult.proxy;
         if (!summary.ipAddress) {
             throw new Error('require ip address');
         }
-        const int32Ip = ipToInt32(summary.ipAddress);
+        const int32Ip = ipToInt32(summary.ipAddress!);
         for (const mask of this.ipMask) {
             if ((mask[1] & int32Ip) === mask[0]) {
                 return types.ProxyResult.proxy;

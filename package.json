@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
+    "browserify": "^16.5.1",
     "codemirror": "^5.53.2",
+    "tsify": "^4.0.1",
+    "watchify": "^3.11.1",
     "web-ext": "^4.1.0"
   },
   "devDependencies": {
@@ -12,12 +15,13 @@
     "@types/node": "^13.9.5",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.2",
-    "style-loader": "^1.1.4",
     "less": "^3.11.1",
     "less-loader": "^5.0.0",
     "raw-loader": "^4.0.0",
+    "style-loader": "^1.1.4",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
+    "webextension-polyfill": "^0.6.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },

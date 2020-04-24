@@ -9,7 +9,6 @@ export class PersistedLogger {
         this.id = 0;
         this.queue = [];
         this.limit = 5;
-        this.clearAll();
     }
 
     add(obj) {

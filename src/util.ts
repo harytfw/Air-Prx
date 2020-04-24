@@ -90,7 +90,16 @@ export function isCidrMatch(cidr: types.CIDR, ip: number) {
 
 
 export function debugLog(...args) {
-    if ((window as any).debug === true) {
+    return;
+    if (typeof window === 'object' && (window as any).debug === true) {
         console.debug(...args);
     }
+    if (typeof window === 'undefined') {
+        alert(args.map(item => item.toString()).join(','));
+    }
+}
+
+
+export function isPAC() {
+    return !window;
 }

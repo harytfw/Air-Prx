@@ -34,7 +34,7 @@ export interface GroupConfig {
     order?: number,
 }
 
-export type Feature = 'chromium' | 'cache' | 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
+export type Feature = 'chromium' | 'resolve_ip' | 'cache' | 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
 
 export interface Configuration {
     features: Feature[]
@@ -56,3 +56,12 @@ export type Cache = Map<string, ProxyResult>;
 
 export const HTTP = 'http://';
 export const HTTPS = 'https://';
+export const BLANK_CONFIG: Configuration = {
+    features: [],
+    groups: [],
+}
+export const TEST_PROXY: ProxyInfo = {
+    type: 'http',
+    host: '127.0.0.1',
+    port: 1081
+}
