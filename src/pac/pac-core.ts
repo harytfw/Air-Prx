@@ -1,8 +1,8 @@
 
 import './pac-types';
-import Core from "../bg/core";
-import { debugLog, extractDomainAndProtocol } from '../util'
-import { IpRuleGroup, VoidRuleGroup } from '../group';
+import Core, { buildProxyInfoMap, buildGroups } from "../bg/core";
+import { debugLog, extractDomainAndProtocol, enableDebugLog, disableDebugLog, ipToInt32 } from '../util'
+import { IpRuleGroup } from '../group';
 import * as types from '../types';
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 const TEST_PROXY: types.ProxyInfo = {
@@ -16,19 +16,9 @@ export class PacCore extends Core {
         super();
     }
 
-    pLog(arg) {
-        if (typeof arg !== 'string') {
-            alert(JSON.stringify(arg));
-        } else {
-            alert(arg);
-        }
-    }
-
     fillIpAddress_PAC(summary: types.RequestSummary) {
         if (summary.ipAddress === undefined) {
-            // debugLog('start resolve ip');
             summary.ipAddress = dnsResolve(summary.hostName);
-            // debugLog(summary.ipAddress);
         }
     }
 
@@ -40,32 +30,18 @@ export class PacCore extends Core {
             protocol,
         };
 
-        // if (this.myIpMatcher && !this.myIpMatcher.isAllow()) {
-        //     return DIRECT_PROXYINFO;
-        // }
-        // debugLog('start getProxy process');
-        // debugLog('summary: ')
-        // debugLog(summary);
         const key = this.computeKey(summary);
         let pInfo: types.ProxyInfo | null = null;
-
         if (this.cache.has(key)) {
             pInfo = this.cache.get(key)!;
             debugLog('hit cache', key, pInfo);
-            debugLog('hit cache, key: ' + key);
-            debugLog(pInfo);
             return pInfo;
         }
-        debugLog('start check group');
-        for (let i = 0; i < this.groups.length; i++) {
-            const g = this.groups[i];
-            // debugLog(`check group, name:${g.name}, prototype: ${Object.getPrototypeOf(g)}`);
-            // debugLog('proxy info: ')
-            // debugLog(g.proxyInfo);
+        for (const g of this.groups) {
             if (g instanceof IpRuleGroup) {
                 this.fillIpAddress_PAC(summary);
             }
-
+            debugLog('group name:', g.name)
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
                 debugLog('proxy result: PROXY')
@@ -79,19 +55,44 @@ export class PacCore extends Core {
                 debugLog('proxy result: CONTINUE');
             }
         }
-
-        debugLog('end check group');
         if (pInfo === null) {
             debugLog(`didn't match any group, use DIRECT`)
             pInfo = DIRECT_PROXYINFO;
         }
-
         if (this.useCache) {
             this.cache.set(key, pInfo);
         }
-
-        debugLog('end process');
         return pInfo;
     }
+}
 
+export function buildPacCore(config: types.Configuration) {
+
+    const core = new PacCore();
+    config.features.forEach(f => core.features.add(f));
+    if (core.features.has('debug')) {
+        enableDebugLog();
+    } else {
+        disableDebugLog();
+    }
+
+    config.groups.forEach(g => {
+        if (g.matchType === 'context') {
+            debugLog('not support matchType: context in PAC mode');
+        }
+    });
+    
+    config.groups = config.groups.filter(g => g.matchType !== 'context');
+
+    core.proxyInfoMap = buildProxyInfoMap(config);
+    core.groups.push(...buildGroups(config.groups));
+    if (core.features.has('limit_my_ip')) {
+        const myIpList = config.myIpList ? config.myIpList : []
+        if (typeof config.myIp === 'string') {
+            core.myIpMatcher.setMyIp(ipToInt32(config.myIp));
+        }
+    }
+    core.sortAll();
+    debugLog(core);
+    return core;
 }

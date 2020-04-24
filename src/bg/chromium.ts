@@ -19,9 +19,8 @@ async function generatePAC(config) {
 }
 
 async function init() {
-
     const config = await browser.storage.local.get();
-    debugLog(config);
+    console.log(config);
     const pac = await generatePAC(config);
     const settingConfig = {
         mode: "pac_script",
@@ -32,15 +31,20 @@ async function init() {
     chrome.proxy.onProxyError.addListener(err => {
         console.error(err);
     });
+    debugLog('set PAC');
     chrome.proxy.settings.set(
         { value: settingConfig, scope: 'regular' },
         function (...args) {
             console.log(...args)
         }
     );
+
 }
 
 export function init_chromium() {
     console.log('init chromium');
+    browser.storage.onChanged.addListener((changes, areaName) => {
+        init()
+    });
     init();
 }

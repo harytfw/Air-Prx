@@ -5,6 +5,7 @@ module.exports = {
     entry: {
         'bg/main': './src/bg/main.ts',
         'options/index': './src/options/index.ts',
+        'options/result': './src/options/result.ts',
         'pac/pac': './src/pac/pac.ts',
     },
     target: 'node',
@@ -44,7 +45,7 @@ module.exports = {
         new CopyPlugin([
             { from: './src/bg/main.html', to: './bg/main.html' },
             { from: './src/manifest.json', to: './' },
-            { from: './options/options.*(html|css)', to: './', context: './src' },
+            { from: './options/*.*(html|css)', to: './', context: './src' },
             { from: './data/*.txt', to: './', context: './src' },
         ]),
     ],

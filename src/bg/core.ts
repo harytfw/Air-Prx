@@ -14,10 +14,9 @@ export default class Core {
     proxyInfoMap: Map<string, types.ProxyInfo>;
     useCache: boolean;
     cache: Cache<string, types.ProxyInfo>;
-    // persistedLogger: PersistedLogger;
     features: Set<types.Feature>;
 
-    myIpMatcher?: MyIpMatcher;
+    myIpMatcher: MyIpMatcher;
 
     tempDisable: boolean;
 
@@ -28,7 +27,8 @@ export default class Core {
         this.cache = new Cache();
         // this.persistedLogger = new PersistedLogger('log');
         this.features = new Set();
-        this.tempDisable = true;
+        this.tempDisable = false;
+        this.myIpMatcher = new MyIpMatcher([], 0);
     }
 
     sortAll() {
@@ -77,9 +77,7 @@ export default class Core {
             debugLog('current ip is not allowed to use proxy');
             return Promise.resolve(DIRECT_PROXYINFO);
         }
-
-        // debugLog(requestInfo);
-
+        
         const summary = this.buildRequestSummary(requestInfo);
         debugLog('summary: ')
 
@@ -127,79 +125,6 @@ export default class Core {
         return Promise.resolve(pInfo);
     }
 
-    comparator(a: types.GroupConfig, b: types.GroupConfig) {
-        let oa = a.order === undefined ? Number.MAX_SAFE_INTEGER : a.order;
-        let ob = b.order === undefined ? Number.MAX_SAFE_INTEGER : b.order;
-        return oa - ob;
-    }
-
-    fromConfig(config: types.Configuration) {
-        config.features.forEach(f => this.features.add(f));
-        if (this.features.has('debug')) {
-            enableDebugLog();
-        } else {
-            disableDebugLog();
-        }
-        debugLog('load from configuration');
-        debugLog('features', this.features);
-        this.proxyInfoMap.clear();
-        this.tempDisable = true;
-        debugLog('features: ' + config.features);
-        for (const g of config.groups) {
-            debugLog('detect group: ' + g.name);
-            debugLog('enable: ' + g.enable);
-            debugLog('order: ' + g.order);
-            debugLog('subSource: ' + g.subSource)
-            debugLog('subType: ' + g.subType)
-            debugLog('matchType: ' + g.matchType)
-            debugLog('proxy.type: ' + g.proxyInfo.type);
-            debugLog('rules length: ' + g.rules?.length);
-        }
-
-        debugLog('init proxyInfoMap');
-        config.groups.map(g => g.proxyInfo)
-            .filter(item => typeof item.id === 'string')
-            .forEach(item => {
-                this.proxyInfoMap.set(item.id!, item);
-            })
-
-        debugLog('process groups');
-        const gs = config.groups
-            // .filter(g => g.enable)
-            // .sort(this.comparator)
-            .map(g => {
-                // debugLog(`init group: ${g.name} , matchType: ${g.matchType}`);
-                switch (g.matchType) {
-                    case 'hostname':
-                        return new HostNameRuleGroup(g.name, g.proxyInfo);
-                    case 'void':
-                        return new VoidRuleGroup(g.name, g.proxyInfo);
-                    case 'ip':
-                        return new IpRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []);
-                    case 'std':
-                    default:
-                        return new StdRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []);
-                }
-            });
-        this.groups.push(...gs);
-        debugLog(this.groups);
-
-        if (this.features.has('limit_my_ip')) {
-            const myIpList = config.myIpList ? config.myIpList : []
-            if (typeof config.myIp === 'string') {
-                this.myIpMatcher = new MyIpMatcher(myIpList, ipToInt32(config.myIp));
-                this.tempDisable = false;
-            } else {
-                this.myIpMatcher = new MyIpMatcher(myIpList, 0);
-                this.myIpMatcher.updateMyIp().then(() => {
-                    this.tempDisable = false;
-                })
-            }
-        } else {
-            this.tempDisable = false;
-        }
-    }
-
 
     buildRequestSummary(requestInfo) {
         const [hostname, protocol] = extractDomainAndProtocol(requestInfo.url);
@@ -218,8 +143,84 @@ export default class Core {
         }
         return summary;
     }
-
-
-
 }
 
+
+function comparator(a: types.GroupConfig, b: types.GroupConfig) {
+    let oa = a.order === undefined ? Number.MAX_SAFE_INTEGER : a.order;
+    let ob = b.order === undefined ? Number.MAX_SAFE_INTEGER : b.order;
+    return oa - ob;
+}
+
+export function buildGroups(groups: types.GroupConfig[]): BaseRuleGroup[] {
+    for (const g of groups) {
+        debugLog('=====')
+        debugLog('group: ' + g.name);
+        debugLog('enable: ' + g.enable);
+        debugLog('order: ' + g.order);
+        debugLog('subSource: ' + g.subSource)
+        debugLog('subType: ' + g.subType)
+        debugLog('matchType: ' + g.matchType)
+        debugLog('proxy.type: ' + g.proxyInfo.type);
+        debugLog('rules length: ' + g.rules?.length);
+        debugLog('=====');
+    }
+    return groups
+        .filter(g => g.enable)
+        .sort(comparator)
+        .map(g => {
+            switch (g.matchType) {
+                case 'hostname':
+                    return new HostNameRuleGroup(g.name, g.proxyInfo);
+                case 'void':
+                    return new VoidRuleGroup(g.name, g.proxyInfo);
+                case 'ip':
+                    return new IpRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []);
+                case 'context':
+                case 'std':
+                default:
+                    return new StdRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []);
+            }
+        });
+}
+
+export function buildProxyInfoMap(config: types.Configuration) {
+    const map = new Map<string, types.ProxyInfo>();
+    config.groups.map(g => g.proxyInfo)
+        .filter(item => typeof item.id === 'string')
+        .forEach(item => {
+            map.set(item.id!, item);
+        })
+    return map;
+}
+
+export function buildCore(config: types.Configuration): Promise<Core> {
+    const core = new Core();
+    config.features.forEach(f => core.features.add(f));
+
+    if (core.features.has('debug')) {
+        enableDebugLog();
+    } else {
+        disableDebugLog();
+    }
+
+    debugLog('load from configuration');
+    debugLog('features', core.features);
+
+    debugLog('init proxyInfoMap');
+    core.proxyInfoMap = buildProxyInfoMap(config);
+
+    debugLog('process groups');
+    core.groups.push(...buildGroups(config.groups));
+    debugLog(core.groups);
+    if (core.features.has('limit_my_ip')) {
+        const myIpList = config.myIpList ? config.myIpList : []
+        if (typeof config.myIp === 'string') {
+            core.myIpMatcher.setMyIp(ipToInt32(config.myIp));
+        } else {
+            core.myIpMatcher.updateMyIp();
+        }
+    }
+    core.sortAll();
+    return Promise.resolve(core);
+}

@@ -1,16 +1,15 @@
 import './pac-types';
-
-
-import { extractDomainAndProtocol } from '../util'
 import * as types from '../types';
-import { PacCore } from './pac-core';
+import { PacCore, buildPacCore } from './pac-core';
+import { debugLog } from '../util';
 
 
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
+
 const TEST_PROXY: types.ProxyInfo = {
     type: 'http',
     host: '127.0.0.1',
-    port: 1081,
+    port: 1080,
 }
 
 function formateProxyInfo(proxyInfo: types.ProxyInfo) {
@@ -30,61 +29,31 @@ function formateProxyInfo(proxyInfo: types.ProxyInfo) {
     return 'DIRECT'
 }
 
+
+let core: PacCore | null = null;
+
+function init_PAC() {
+
+    //START_REPLACE
+    let config = null as any;
+    if (config === null) {
+        throw new Error('PLEASE REPLACE THIS BLOCK');
+    }
+    //END_REPLACE
+    debugLog(config);
+    core = buildPacCore(config);
+    debugLog('success build pac core');
+}
+
 function FindProxyForURL(url: string, host: string): string {
-    alert('test');
     if (!core) {
         return 'DIRECT';
     }
     const proxyInfo = core!.getProxy_PAC(url, host);
     const formated = formateProxyInfo(proxyInfo);
-    // alert(formated);
     return formated;
 }
 
 
-
-let core: PacCore | null = null;
-
-function init_PAC() {
-    //START_REPLACE
-    let config = {} as types.Configuration;
-    //END_REPLACE
-    /*
-    config = {
-        "features": [
-        ],
-        "groups": [
-            {
-                "name": "first-void",
-                "proxyInfo": {
-                    "type": "http",
-                    "host": "127.0.0.1",
-                    "port": 1081
-                },
-                "order": -1,
-                "matchType": "void",
-                "subSource": "",
-                "enable": true
-            },
-            {
-                "name": "void",
-                "proxyInfo": {
-                    "type": "http",
-                    "host": "127.0.0.1",
-                    "port": 1081
-                },
-                "order": 1,
-                "matchType": "void",
-                "subSource": "",
-                "enable": true
-            }
-        ],
-        "myIpList": [
-            "116.16.0.0/12"
-        ]
-    }*/
-    core = new PacCore();
-    core.fromConfig(config);
-}
 globalThis.FindProxyForURL = FindProxyForURL;
 init_PAC();

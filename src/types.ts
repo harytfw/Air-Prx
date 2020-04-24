@@ -34,7 +34,7 @@ export interface GroupConfig {
     order?: number,
 }
 
-export type Feature = 'cache' | 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
+export type Feature = 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
 
 export interface Configuration {
     features: Feature[]
@@ -65,4 +65,10 @@ export const TEST_PROXY: ProxyInfo = {
     type: 'http',
     host: '127.0.0.1',
     port: 1081
+}
+
+
+export type ExtEvent = 'getCache';
+export type ExtEventMessage = {
+    name: ExtEvent,
 }

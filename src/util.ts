@@ -71,11 +71,11 @@ export function isCidrMatch(cidr: types.CIDR, ip: number) {
 }
 
 export function enableDebugLog() {
-    (window as any).debug = true;
+    (globalThis as any).debug = true;
 }
 
 export function disableDebugLog() {
-    (window as any).debug = false;
+    (globalThis as any).debug = false;
 }
 
 export function debugLog(...args) {
@@ -83,7 +83,11 @@ export function debugLog(...args) {
         console.debug(...args);
     }
     if (typeof window === 'undefined') { // PAC
-        alert(stringify(args))
+        if(args.length === 1) {
+            alert(stringify(args[0]));
+        } else {
+            alert(stringify(args))
+        }
     }
 }
 
