@@ -34,7 +34,7 @@ export interface GroupConfig {
     order?: number,
 }
 
-export type Feature = 'chromium' |  'cache' | 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
+export type Feature = 'cache' | 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
 
 export interface Configuration {
     features: Feature[]

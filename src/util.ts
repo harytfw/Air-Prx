@@ -1,5 +1,4 @@
 import * as types from "./types";
-import ruleLoader from "./rule-loader";
 
 import stringify from 'stringify-object';
 
@@ -49,24 +48,6 @@ export function extractDomainAndProtocol(url: string) {
     return [domainName, protocol];
 }
 
-export async function synchronizeGroup(group: types.GroupConfig) {
-    let rules: string[] = [];
-    debugLog('update subscription ', group);
-    switch (group.subType) {
-        case 'builtin_gfw':
-            rules = await ruleLoader.loadEmbededGFW();
-            break;
-        case 'builtin_china_ip':
-            rules = await ruleLoader.loadChinaCIDR();
-            break;
-        default:
-            debugLog('do not support this subscription type', group.subType);
-            break;
-    }
-    if (rules.length > 0) {
-        group.rules = rules;
-    }
-}
 
 export function ipToInt32(ip: string): number {
     let ipArr = ip.split('.').map(a => parseInt(a));
@@ -89,7 +70,13 @@ export function isCidrMatch(cidr: types.CIDR, ip: number) {
     return (ip & cidr[1]) === cidr[0];
 }
 
+export function enableDebugLog() {
+    (window as any).debug = true;
+}
 
+export function disableDebugLog() {
+    (window as any).debug = false;
+}
 
 export function debugLog(...args) {
     if (typeof window === 'object' && (window as any).debug === true) {

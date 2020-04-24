@@ -1,5 +1,5 @@
 
-import { extractDomainAndProtocol, ipToInt32, debugLog } from '../util'
+import { extractDomainAndProtocol, ipToInt32, debugLog, enableDebugLog, disableDebugLog } from '../util'
 import * as types from '../types';
 import { Cache } from '../proxy-cache';
 import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../group'
@@ -134,12 +134,16 @@ export default class Core {
     }
 
     fromConfig(config: types.Configuration) {
-
-        this.proxyInfoMap.clear();
-        // debugLog(config);
-        this.tempDisable = true;
-        debugLog('load from configuration');
         config.features.forEach(f => this.features.add(f));
+        if (this.features.has('debug')) {
+            enableDebugLog();
+        } else {
+            disableDebugLog();
+        }
+        debugLog('load from configuration');
+        debugLog('features', this.features);
+        this.proxyInfoMap.clear();
+        this.tempDisable = true;
         debugLog('features: ' + config.features);
         for (const g of config.groups) {
             debugLog('detect group: ' + g.name);

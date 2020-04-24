@@ -1,7 +1,6 @@
 
 import 'webextension-polyfill/dist/browser-polyfill.js';
 import Core from './core';
-import ruleLoader from '../rule-loader';
 import { debugLog } from '../util';
 import * as types from '../types';
 
@@ -10,7 +9,6 @@ let core: Core | null = null;
 async function init() {
     core = new Core();
     (window as any).core = core;
-    (window as any).ruleLoader = ruleLoader;
 
     const config: types.Configuration = (await browser.storage.local.get()) as any;
 

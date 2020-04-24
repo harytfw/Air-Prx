@@ -9,10 +9,10 @@ import 'codemirror/addon/fold/foldcode';
 import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/foldgutter';
 
-
 import browser from 'webextension-polyfill/dist/browser-polyfill.js';
 import * as types from '../types';
-import { synchronizeGroup, debugLog } from '../util';
+import { debugLog } from '../util';
+import { syncGroup, syncConfig } from '../syncUtil';
 
 const editor = CodeMirror(document.body.querySelector('#editor')! as HTMLDivElement, {
     mode: { name: "javascript", json: true },
@@ -71,20 +71,26 @@ function save() {
     showMsg('save to storage done', 5000);
 }
 
-async function synchronize() {
+async function onSync() {
     const config = JSON.parse(editor.getValue());
     if (!Array.isArray(config.groups)) {
         return;
     }
     debugLog('before synchronize', JSON.parse(JSON.stringify(config)));
     for (const plainGroup of config.groups) {
-        await synchronizeGroup(plainGroup);
+        await syncGroup(plainGroup);
     }
     editor.setValue(JSON.stringify(config, null, 2));
     debugLog('after synchronize', config);
     showMsg('synchronize subscription done', 5000);
 }
 
+
+async function onSyncConfig() {
+    const cloned = JSON.parse(editor.getValue()) as types.Configuration;
+    await syncConfig(cloned);
+    editor.setValue(JSON.stringify(cloned));
+}
 
 
 function exportFn() {
@@ -139,12 +145,12 @@ function updateButtons(b: boolean) {
 }
 
 
-function showMsg(err, timeout = 0) {
+function showMsg(msg, timeout = 0) {
     const e = document.querySelector('#error') as HTMLElement;
-    if (!err) {
+    if (!msg) {
         e.style.display = 'none';
     } else {
-        e.textContent = err;
+        e.textContent = msg;
         e.style.display = 'block';
     }
     if (timeout > 0) {
@@ -187,13 +193,24 @@ function addMissingProperty(config: { features?: [], groups?: types.GroupConfig[
 
 
 function init() {
+
+    window.onunhandledrejection = (ex) => {
+        showMsg(JSON.stringify(ex));
+    }
+
+    window.onerror = (err) => {
+        showMsg(err);
+    }
+
+
     $('#load-btn')?.addEventListener('click', load);
     $('#validate-btn')?.addEventListener('click', validate);
     $('#export-btn')?.addEventListener('click', exportFn);
     $('#save-btn')?.addEventListener('click', save);
     $('#save-sync-syn')?.addEventListener('click', saveSync);
     $('#load-sync-syn')?.addEventListener('click', loadSync);
-    $('#sync-btn')?.addEventListener('click', synchronize);
+    $('#sync-btn')?.addEventListener('click', onSync);
+    $('#sync-config-btn')?.addEventListener('click', onSyncConfig);
     updateButtons(false);
 }
 init();
