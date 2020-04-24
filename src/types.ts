@@ -19,7 +19,7 @@ export enum ProxyResult {
     continue,
 }
 
-export type SubType = 'builtin_china_cidr' | 'builtin_gfw' | 'cidr' | 'gfw' | 'base64_gfw' | 'autoproxy';
+export type SubType = 'builtin_china_ip' | 'builtin_gfw' | 'cidr' | 'gfw' | 'base64_gfw' | 'autoproxy';
 export type MatchType = 'document_url' | 'ip' | 'std' | 'hostname' | 'void' | 'context';
 
 export interface GroupConfig {
@@ -34,11 +34,12 @@ export interface GroupConfig {
     order?: number,
 }
 
-export type Feature = 'chromium' | 'resolve_ip' | 'cache' | 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
+export type Feature = 'chromium' |  'cache' | 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
 
 export interface Configuration {
     features: Feature[]
     groups: GroupConfig[],
+    subSource?: string, // 全局订阅源
     myIp?: string;
     myIpList?: string[],
 }

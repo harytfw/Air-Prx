@@ -56,7 +56,7 @@ export async function synchronizeGroup(group: types.GroupConfig) {
         case 'builtin_gfw':
             rules = await ruleLoader.loadEmbededGFW();
             break;
-        case 'builtin_china_cidr':
+        case 'builtin_china_ip':
             rules = await ruleLoader.loadChinaCIDR();
             break;
         default:
