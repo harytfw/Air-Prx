@@ -1,4 +1,8 @@
+export type int128 = [number, number, number, number];
+
 export type CIDR = [number, number];
+
+export type CIDR_V6 = [int128,int128];
 
 export interface ProxyInfo {
     type: string,

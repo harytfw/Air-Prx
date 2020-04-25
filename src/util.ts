@@ -1,6 +1,8 @@
 import * as types from "./types";
 
 import stringify from 'stringify-object';
+import ipaddr from 'ipaddr.js';
+
 import { type } from "os";
 
 export function lowerBound(array: string[], start: number, end: number, i: number, target: string, j: number) {
@@ -63,12 +65,37 @@ export function toCIDR(strCidr: string): types.CIDR {
     for (let i = 31, len = maskLen; i >= 0 && len > 0; i--, len--) {
         mask = 1 << i | mask;
     }
-
     return [int32Ip, mask];
 }
 
-export function isCidrMatch(cidr: types.CIDR, ip: number) {
+export function ipv6ToInt128(ip: string): types.int128 {
+    const ipv6 = ipaddr.IPv6.parse(ip);
+    return ipv6.parts as types.int128;
+}
+
+export function int128_AND(a: types.int128, b: types.int128): types.int128 {
+    return [a[0] & b[0], a[1] & b[1], a[2] & b[2], a[3] & b[3]]
+}
+
+export function int128_EQ(a: types.int128, b: types.int128): boolean {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+}
+
+export function toCIDR_V6(strCidr: string): types.CIDR_V6 {
+    const [ipv6, maskLen] = ipaddr.IPv6.parseCIDR(strCidr);
+    const subnet: number[] = [];
+    subnet.push(...ipv6.parts);
+    const mask: number[] = [];
+    mask.push(...ipaddr.IPv6.subnetMaskFromPrefixLength(maskLen).parts);
+    return [subnet, mask] as types.CIDR_V6;
+}
+
+export function isCIDRMatch(cidr: types.CIDR, ip: number) {
     return (ip & cidr[1]) === cidr[0];
+}
+
+export function isCIDRV6Match(cidr: types.CIDR_V6, ip: types.int128) {
+    return int128_EQ(cidr[0], int128_AND(ip, cidr[1]))
 }
 
 export function enableDebugLog() {
@@ -84,7 +111,7 @@ export function debugLog(...args) {
         console.debug(...args);
     }
     if (typeof window === 'undefined') { // PAC
-        if(args.length === 1) {
+        if (args.length === 1) {
             alert(stringify(args[0]));
         } else {
             alert(stringify(args))
@@ -104,4 +131,13 @@ export async function buildCookieStoreIdMap() {
 
 export function isPAC() {
     return typeof window === 'undefined';
+}
+
+
+
+export async function getMyIp(): Promise<string> {
+    return fetch('http://ip-api.com/json/').then(a => a.json()).then(data => {
+        debugLog('query ip info', data);
+        return Promise.resolve(data.query)
+    })
 }

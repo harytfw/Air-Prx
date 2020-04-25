@@ -263,6 +263,7 @@ export async function buildCore(config: types.Configuration): Promise<Core> {
     debugLog(core.groups);
     if (core.features.has('limit_my_ip')) {
         const myIpList = config.myIpList ? config.myIpList : []
+        myIpList.forEach(item => core.myIpMatcher.addIp(item));
         if (typeof config.myIp === 'string') {
             core.myIpMatcher.setMyIp(ipToInt32(config.myIp));
         } else {

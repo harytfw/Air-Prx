@@ -54,6 +54,5 @@ function FindProxyForURL(url: string, host: string): string {
     return formated;
 }
 
-
 globalThis.FindProxyForURL = FindProxyForURL;
 init_PAC();

@@ -1,4 +1,4 @@
-import { ipToInt32, isCidrMatch, debugLog, toCIDR } from "./util";
+import { ipToInt32, isCIDRMatch, debugLog, toCIDR, isPAC, getMyIp } from "./util";
 import * as types from './types';
 export class MyIpMatcher {
 
@@ -15,32 +15,34 @@ export class MyIpMatcher {
             return true;
         }
         for (const cidr of this.myIpList) {
-            if (isCidrMatch(cidr, this.myIp)) {
+            if (isCIDRMatch(cidr, this.myIp)) {
                 return true;
             }
         }
         return false;
     }
 
-    setMyIpList(myIpList:types.CIDR[]) {
+    addIp(ip: string) {
+        this.myIpList.push(toCIDR(ip));
+    }
+
+    setMyIpList(myIpList: types.CIDR[]) {
         this.myIpList = myIpList;
     }
 
-    setMyIp(myIp:number) {
+    setMyIp(myIp: number) {
         this.myIp = myIp;
     }
 
     async updateMyIp() {
+        if(isPAC()) {
+            debugLog('can not update my ip under PAC mode');
+            return;
+        }
         debugLog('start update my ip');
-        const strIp = await this.getMyIp();
+        const strIp = await getMyIp();
         this.myIp = ipToInt32(strIp);
         debugLog("my ip:", this.myIp);
     }
 
-    async getMyIp(): Promise<string> {
-        return fetch('http://ip-api.com/json/').then(a => a.json()).then(data => {
-            debugLog('query ip info', data);
-            return Promise.resolve(data.query)
-        })
-    }
 }
