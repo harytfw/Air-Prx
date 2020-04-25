@@ -1,5 +1,5 @@
 
-import { extractDomainAndProtocol, ipToInt32, debugLog, enableDebugLog, disableDebugLog, buildCookieStoreIdMap } from '../util'
+import { extractDomainAndProtocol, ipToInt32, debugLog, enableDebugLog, disableDebugLog, buildCookieStoreIdMap, constructorName } from '../util'
 import * as types from '../types';
 import { Cache } from '../proxy-cache';
 import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../group'
@@ -76,10 +76,18 @@ export default class Core {
         return proxyInfo;
     }
 
+    async updateMyIP() {
+        this.tempDisable = true;
+        await this.myIpMatcher.updateMyIp();
+        this.tempDisable = false;
+    }
+
     async fillIpAddress(summary: types.RequestSummary) {
         if (typeof summary.ipAddress !== 'string') {
+            debugLog('start feach dns');
             const record = await browser.dns.resolve(summary.hostName);
             summary.ipAddress = record.addresses[0];
+            debugLog('fetch dns done');
         }
     }
 
@@ -89,34 +97,30 @@ export default class Core {
             return Promise.resolve(DIRECT_PROXYINFO);
         }
 
-        if (this.myIpMatcher && !this.myIpMatcher.isAllow()) {
+        if (!this.myIpMatcher.isAllow()) {
             debugLog('current ip is not allowed to use proxy');
             return Promise.resolve(DIRECT_PROXYINFO);
         }
 
         const summary = this.buildRequestSummary(requestInfo);
-        debugLog('summary: ')
+
 
         let pInfo: types.ProxyInfo | null = null;
 
         const key = this.computeKey(summary);
         const cache = this.computeCache(summary);
-        if (cache && cache.has(key)) {
+        if (cache.has(key)) {
             pInfo = cache.get(key)!;
             debugLog('hit cache', 'key:', key, 'proxy info:', pInfo);
             return Promise.resolve(pInfo);
         }
 
         for (const g of this.groups) {
-            debugLog(`check group, name:${g.name}, prototype: ${Object.getPrototypeOf(g)}`);
-            debugLog('proxy info: ')
-            debugLog(g.proxyInfo);
 
-            if (g instanceof IpRuleGroup) {
-                debugLog('start feach dns');
+            debugLog('check group', 'name:', g.name, 'type:', constructorName(g));
+
+            if (g instanceof IpRuleGroup && typeof summary.ipAddress !== 'string') {
                 await this.fillIpAddress(summary);
-                debugLog('fetch dns done');
-                debugLog(summary);
             }
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
@@ -207,11 +211,15 @@ export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<s
             case 'std':
                 ruleGroups.push(new StdRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []));
                 break;
+            case 'container':
+                break;
+            default:
+                console.error('not supported match type: ', g.matchType);
         }
         if (g.matchType === 'container') {
             const containerGroup = buildContainerGroup(g, cookieStoreIdMap);
             if (containerGroup === null) {
-                console.error('can not build container group', g);
+                debugLog('can not build container group', g);
             } else {
                 ruleGroups.push(containerGroup);
             }
@@ -223,6 +231,7 @@ export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<s
 export function buildContainerGroup(groupConfig: types.GroupConfig, cookieStoreIdMap: Map<string, string>) {
     const containerName = groupConfig.containerName ? groupConfig.containerName : '';
     if (!cookieStoreIdMap.has(containerName)) {
+        debugLog(`not found container name:`, containerName);
         return null;
     }
     return new ContainerGroup(groupConfig.name, groupConfig.proxyInfo, cookieStoreIdMap.get(containerName)!);

@@ -1,7 +1,7 @@
 
 import './pac-types';
 import Core, { buildProxyInfoMap, buildGroups } from "../bg/core";
-import { debugLog, extractDomainAndProtocol, enableDebugLog, disableDebugLog, ipToInt32 } from '../util'
+import { debugLog, extractDomainAndProtocol, enableDebugLog, disableDebugLog, ipToInt32, constructorName } from '../util'
 import { IpRuleGroup } from '../group';
 import * as types from '../types';
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
@@ -35,14 +35,14 @@ export class PacCore extends Core {
         let pInfo: types.ProxyInfo | null = null;
         if (cache.has(key)) {
             pInfo = cache.get(key)!;
-            debugLog('hit cache', key, pInfo);
+            debugLog('hit cache', 'key:', key, 'proxy info:', pInfo);
             return pInfo;
         }
         for (const g of this.groups) {
+            debugLog('group name:', g.name, "type:", constructorName(g));
             if (g instanceof IpRuleGroup) {
                 this.fillIpAddress_PAC(summary);
             }
-            debugLog('group name:', g.name)
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
                 debugLog('proxy result: PROXY')
@@ -60,9 +60,11 @@ export class PacCore extends Core {
             debugLog(`didn't match any group, use DIRECT`)
             pInfo = DIRECT_PROXYINFO;
         }
+
         if (this.useCache) {
             cache.set(key, pInfo);
         }
+        
         return pInfo;
     }
 }

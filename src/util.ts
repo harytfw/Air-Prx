@@ -3,8 +3,6 @@ import * as types from "./types";
 import stringify from 'stringify-object';
 import ipaddr from 'ipaddr.js';
 
-import { type } from "os";
-
 export function lowerBound(array: string[], start: number, end: number, i: number, target: string, j: number) {
     if (start >= end) {
         return -1;
@@ -140,4 +138,9 @@ export async function getMyIp(): Promise<string> {
         debugLog('query ip info', data);
         return Promise.resolve(data.query)
     })
+}
+
+
+export function constructorName(obj: Object): string {
+    return obj.constructor.name;
 }

@@ -1,7 +1,8 @@
+# 版本 1.x.x
+
 # 调整代理执行顺序
 
-
-# Example Configuration
+# 配置模板
 
 
 ```json
@@ -31,22 +32,23 @@
 
 | property name | type | value |
 | -- | -- | -- |
-| features | string[] | `'log'|'cache'|'ipv6'` |
+| features | string[] | `debug` \| `ipv6` \| `container` |
 | groups | GroupConfig[] | |
 
 
 ## GroupConfig
 
-| property name | type | optional | value |
+| property name | type | Optional | value |
 | -- | -- | -- | -- |
 | name | string | No | |
 | enable | boolean | No |
-| matchType | string| Yes |
-| order | number | Yes|
 | proxyInfo | ProxyInfo | No |
+| matchType | string| No |
+| order | number | Yes|
 | rules |string[] | Yes |
 | subSource | string | Yes　|
 | subType | string | Yes |
+| containerName | string | Yes |
 
 ## ProxyInfo 
 
@@ -65,4 +67,4 @@
 
 # 如何在 Chrome 上使用带授权的 HTTP 代理或 SOCKS 代理
 
-# 使用 sstunel 将代理进行包装，在本地暴露出新的代理端口。
+使用 sstunel 将代理进行包装，在本地暴露出新的代理端口。
