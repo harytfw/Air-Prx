@@ -107,6 +107,7 @@ export class Cache<K, T> {
 
         if (this.head === entry) {
             this.head = entry.next;
+            entry.prev = entry.next = null;
             return;
         }
 

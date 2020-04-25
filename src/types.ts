@@ -20,21 +20,21 @@ export enum ProxyResult {
 }
 
 export type SubType = 'builtin_china_ip' | 'builtin_gfw' | 'cidr' | 'gfw' | 'base64_gfw' | 'autoproxy';
-export type MatchType = 'document_url' | 'ip' | 'std' | 'hostname' | 'void' | 'context';
+export type MatchType = 'document_url' | 'ip' | 'std' | 'hostname' | 'void' | 'container';
 
 export interface GroupConfig {
     name: string,
     enable: boolean,
     proxyInfo: ProxyInfo,
-    contextName?: string, //TODO: cookieStoreId
     rules?: string[],
     subSource?: string,
     subType?: SubType,
     matchType?: MatchType,
     order?: number,
+    containerName?: string,
 }
 
-export type Feature = 'limit_my_ip' | 'ipv6' | 'log' | 'debug';
+export type Feature = 'limit_my_ip' | 'ipv6' | 'log' | 'debug' | 'container';
 
 export interface Configuration {
     features: Feature[]
@@ -50,6 +50,7 @@ export interface RequestSummary {
     protocol: string,
     documentUrl?: string,
     documentHostName?: string,
+    cookieStoreId?: string,
     ipAddress?: string,
 }
 

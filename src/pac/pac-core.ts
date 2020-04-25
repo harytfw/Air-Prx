@@ -31,9 +31,10 @@ export class PacCore extends Core {
         };
 
         const key = this.computeKey(summary);
+        const cache = this.computeCache(summary);
         let pInfo: types.ProxyInfo | null = null;
-        if (this.cache.has(key)) {
-            pInfo = this.cache.get(key)!;
+        if (cache.has(key)) {
+            pInfo = cache.get(key)!;
             debugLog('hit cache', key, pInfo);
             return pInfo;
         }
@@ -60,7 +61,7 @@ export class PacCore extends Core {
             pInfo = DIRECT_PROXYINFO;
         }
         if (this.useCache) {
-            this.cache.set(key, pInfo);
+            cache.set(key, pInfo);
         }
         return pInfo;
     }
@@ -77,15 +78,15 @@ export function buildPacCore(config: types.Configuration) {
     }
 
     config.groups.forEach(g => {
-        if (g.matchType === 'context') {
-            debugLog('not support matchType: context in PAC mode');
+        if (g.matchType === 'container') {
+            debugLog('not support matchType: container in PAC mode');
         }
     });
-    
-    config.groups = config.groups.filter(g => g.matchType !== 'context');
+
+    config.groups = config.groups.filter(g => g.matchType !== 'container');
 
     core.proxyInfoMap = buildProxyInfoMap(config);
-    core.groups.push(...buildGroups(config.groups));
+    core.groups.push(...buildGroups(config.groups, new Map()));
     if (core.features.has('limit_my_ip')) {
         const myIpList = config.myIpList ? config.myIpList : []
         if (typeof config.myIp === 'string') {

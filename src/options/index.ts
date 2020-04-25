@@ -11,7 +11,7 @@ import 'codemirror/addon/fold/foldgutter';
 
 import browser from 'webextension-polyfill/dist/browser-polyfill.js';
 import * as types from '../types';
-import { debugLog } from '../util';
+import { debugLog, buildCookieStoreIdMap } from '../util';
 import { syncGroup, syncConfig } from '../syncUtil';
 
 const editor = CodeMirror(document.body.querySelector('#editor')! as HTMLDivElement, {
@@ -113,8 +113,8 @@ function exportFn() {
 async function validate() {
     let err;
     try {
-        const obj = JSON.parse(editor.getValue());
-        addMissingProperty(obj);
+        const obj = JSON.parse(editor.getValue()) as types.Configuration;
+        addMissingProperty(obj as any);
         const json = JSON.stringify(obj, null, 2);
         editor.setValue(json);
     } catch (ex) {
@@ -150,7 +150,7 @@ function showMsg(msg, timeout = 0) {
     if (!msg) {
         e.style.display = 'none';
     } else {
-        e.textContent = msg;
+        e.innerText = msg;
         e.style.display = 'block';
     }
     if (timeout > 0) {
@@ -191,6 +191,12 @@ function addMissingProperty(config: { features?: [], groups?: types.GroupConfig[
     }
 }
 
+async function showContainer() {
+    const cookieStoreIdMap = await buildCookieStoreIdMap();
+    const msg = Array.from(cookieStoreIdMap.keys()).join("\n");
+    showMsg(msg);
+}
+
 
 function init() {
 
@@ -202,7 +208,6 @@ function init() {
         showMsg(err);
     }
 
-
     $('#load-btn')?.addEventListener('click', load);
     $('#validate-btn')?.addEventListener('click', validate);
     $('#export-btn')?.addEventListener('click', exportFn);
@@ -211,6 +216,7 @@ function init() {
     $('#load-sync-syn')?.addEventListener('click', loadSync);
     $('#sync-btn')?.addEventListener('click', onSync);
     $('#sync-config-btn')?.addEventListener('click', onSyncConfig);
+    $('#show-container-btn')?.addEventListener('click', showContainer);
     updateButtons(false);
 }
 init();

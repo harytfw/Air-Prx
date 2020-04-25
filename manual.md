@@ -1,5 +1,6 @@
 # 调整代理执行顺序
 
+
 # Example Configuration
 
 
@@ -59,3 +60,9 @@
 | username | string | Yes | |
 | password | string| Yes | |
 | proxyDNS | boolean | Yes | |
+
+
+
+# 如何在 Chrome 上使用带授权的 HTTP 代理或 SOCKS 代理
+
+# 使用 sstunel 将代理进行包装，在本地暴露出新的代理端口。

@@ -17,6 +17,7 @@ async function init() {
     }
     try {
         core = await buildCore(config);
+        (window as any).core = core;
     } catch (ex) {
         console.error(ex);
         core = null;
@@ -56,7 +57,7 @@ export function init_firefox() {
         if (msg.name === 'getCache') {
             console.log(msg.name);
             if (core) {
-                sendResponse(core.cache.entries());
+                sendResponse(core.caches.entries());
             } else {
                 sendResponse([]);
             }

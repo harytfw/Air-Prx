@@ -1,19 +1,22 @@
 
-import { extractDomainAndProtocol, ipToInt32, debugLog, enableDebugLog, disableDebugLog } from '../util'
+import { extractDomainAndProtocol, ipToInt32, debugLog, enableDebugLog, disableDebugLog, buildCookieStoreIdMap } from '../util'
 import * as types from '../types';
 import { Cache } from '../proxy-cache';
 import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../group'
-import { PersistedLogger } from '../persisted-logger';
 import { MyIpMatcher } from '../myip-matcher';
+import { ContainerGroup } from '../group/container-group';
+import { debuglog } from 'util';
 
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
+
+const CACHE_NAME = '__CACHE__';
 
 export default class Core {
 
     groups: BaseRuleGroup[];
     proxyInfoMap: Map<string, types.ProxyInfo>;
     useCache: boolean;
-    cache: Cache<string, types.ProxyInfo>;
+    caches: Map<string, Cache<string, types.ProxyInfo>>;
     features: Set<types.Feature>;
 
     myIpMatcher: MyIpMatcher;
@@ -24,11 +27,11 @@ export default class Core {
         this.groups = [];
         this.proxyInfoMap = new Map();
         this.useCache = true;
-        this.cache = new Cache();
         // this.persistedLogger = new PersistedLogger('log');
         this.features = new Set();
         this.tempDisable = false;
         this.myIpMatcher = new MyIpMatcher([], 0);
+        this.caches = new Map();
     }
 
     sortAll() {
@@ -41,7 +44,10 @@ export default class Core {
 
     disableCache() {
         this.useCache = false;
-        this.cache.clear();
+
+        for (const cache of this.caches.values()) {
+            cache.clear();
+        }
     }
 
     enableCache() {
@@ -50,6 +56,16 @@ export default class Core {
 
     computeKey(summary: types.RequestSummary) {
         return summary.hostName;
+    }
+
+    computeCache(summary: types.RequestSummary) {
+        const cacheName = this.features.has('container') && summary.cookieStoreId ? summary.cookieStoreId : CACHE_NAME;
+        let cache = this.caches.get(cacheName);
+        if (!cache) {
+            cache = new Cache();
+            this.caches.set(cacheName, cache);
+        }
+        return cache;
     }
 
     resolveProxyInfo(proxyInfo: types.ProxyInfo): types.ProxyInfo {
@@ -77,21 +93,25 @@ export default class Core {
             debugLog('current ip is not allowed to use proxy');
             return Promise.resolve(DIRECT_PROXYINFO);
         }
-        
+
         const summary = this.buildRequestSummary(requestInfo);
         debugLog('summary: ')
 
-        const key = this.computeKey(summary);
         let pInfo: types.ProxyInfo | null = null;
-        if (this.cache.has(key)) {
-            pInfo = this.cache.get(key)!;
-            debugLog('hit cache', key, pInfo);
+
+        const key = this.computeKey(summary);
+        const cache = this.computeCache(summary);
+        if (cache && cache.has(key)) {
+            pInfo = cache.get(key)!;
+            debugLog('hit cache', 'key:', key, 'proxy info:', pInfo);
             return Promise.resolve(pInfo);
         }
+
         for (const g of this.groups) {
             debugLog(`check group, name:${g.name}, prototype: ${Object.getPrototypeOf(g)}`);
             debugLog('proxy info: ')
             debugLog(g.proxyInfo);
+
             if (g instanceof IpRuleGroup) {
                 debugLog('start feach dns');
                 await this.fillIpAddress(summary);
@@ -118,7 +138,7 @@ export default class Core {
         }
 
         if (this.useCache) {
-            this.cache.set(key, pInfo);
+            cache.set(key, pInfo);
         }
 
         debugLog('end process');
@@ -140,9 +160,12 @@ export default class Core {
 
             documentUrl: requestInfo.documentUrl,
             documentHostName: siteHostName,
+            cookieStoreId: requestInfo.cookieStoreId,
         }
         return summary;
     }
+
+
 }
 
 
@@ -152,7 +175,8 @@ function comparator(a: types.GroupConfig, b: types.GroupConfig) {
     return oa - ob;
 }
 
-export function buildGroups(groups: types.GroupConfig[]): BaseRuleGroup[] {
+export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<string, string>): BaseRuleGroup[] {
+    debugLog('cookieStoreIdMap', cookieStoreIdMap);
     for (const g of groups) {
         debugLog('=====')
         debugLog('group: ' + g.name);
@@ -165,23 +189,43 @@ export function buildGroups(groups: types.GroupConfig[]): BaseRuleGroup[] {
         debugLog('rules length: ' + g.rules?.length);
         debugLog('=====');
     }
-    return groups
+    groups = groups
         .filter(g => g.enable)
-        .sort(comparator)
-        .map(g => {
-            switch (g.matchType) {
-                case 'hostname':
-                    return new HostNameRuleGroup(g.name, g.proxyInfo);
-                case 'void':
-                    return new VoidRuleGroup(g.name, g.proxyInfo);
-                case 'ip':
-                    return new IpRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []);
-                case 'context':
-                case 'std':
-                default:
-                    return new StdRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []);
+        .sort(comparator);
+    const ruleGroups: BaseRuleGroup[] = [];
+    for (const g of groups) {
+        switch (g.matchType) {
+            case 'hostname':
+                ruleGroups.push(new HostNameRuleGroup(g.name, g.proxyInfo));
+                break;
+            case 'void':
+                ruleGroups.push(new VoidRuleGroup(g.name, g.proxyInfo));
+                break;
+            case 'ip':
+                ruleGroups.push(new IpRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []));
+                break;
+            case 'std':
+                ruleGroups.push(new StdRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []));
+                break;
+        }
+        if (g.matchType === 'container') {
+            const containerGroup = buildContainerGroup(g, cookieStoreIdMap);
+            if (containerGroup === null) {
+                console.error('can not build container group', g);
+            } else {
+                ruleGroups.push(containerGroup);
             }
-        });
+        }
+    }
+    return ruleGroups;
+}
+
+export function buildContainerGroup(groupConfig: types.GroupConfig, cookieStoreIdMap: Map<string, string>) {
+    const containerName = groupConfig.containerName ? groupConfig.containerName : '';
+    if (!cookieStoreIdMap.has(containerName)) {
+        return null;
+    }
+    return new ContainerGroup(groupConfig.name, groupConfig.proxyInfo, cookieStoreIdMap.get(containerName)!);
 }
 
 export function buildProxyInfoMap(config: types.Configuration) {
@@ -189,12 +233,12 @@ export function buildProxyInfoMap(config: types.Configuration) {
     config.groups.map(g => g.proxyInfo)
         .filter(item => typeof item.id === 'string')
         .forEach(item => {
-            map.set(item.id!, item);
+            map.set(item.id!, JSON.parse(JSON.stringify(item)));
         })
     return map;
 }
 
-export function buildCore(config: types.Configuration): Promise<Core> {
+export async function buildCore(config: types.Configuration): Promise<Core> {
     const core = new Core();
     config.features.forEach(f => core.features.add(f));
 
@@ -211,7 +255,11 @@ export function buildCore(config: types.Configuration): Promise<Core> {
     core.proxyInfoMap = buildProxyInfoMap(config);
 
     debugLog('process groups');
-    core.groups.push(...buildGroups(config.groups));
+    let cookieStoreIdMap = new Map();
+    if (core.features.has('container')) {
+        cookieStoreIdMap = await buildCookieStoreIdMap();
+    }
+    core.groups.push(...buildGroups(config.groups, cookieStoreIdMap));
     debugLog(core.groups);
     if (core.features.has('limit_my_ip')) {
         const myIpList = config.myIpList ? config.myIpList : []

@@ -13,8 +13,10 @@
     },
     "permissions": [
         "proxy",
+        "cookies",
         "storage",
         "dns",
+        "contextualIdentities",
         "<all_urls>"
     ],
     "browser_specific_settings": {

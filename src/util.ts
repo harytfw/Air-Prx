@@ -1,6 +1,7 @@
 import * as types from "./types";
 
 import stringify from 'stringify-object';
+import { type } from "os";
 
 export function lowerBound(array: string[], start: number, end: number, i: number, target: string, j: number) {
     if (start >= end) {
@@ -91,7 +92,16 @@ export function debugLog(...args) {
     }
 }
 
+export async function buildCookieStoreIdMap() {
+    const map = new Map<string, string>();
+    const cis = await browser.contextualIdentities.query({});
+    for (const ci of cis) {
+        map.set(ci.name, ci.cookieStoreId);
+    }
+    return map;
+}
+
 
 export function isPAC() {
-    return !window;
+    return typeof window === 'undefined';
 }
