@@ -2,10 +2,10 @@ import { BaseRuleGroup } from "./base-rule-group";
 import * as types from '../types';
 
 export class ContainerGroup extends BaseRuleGroup {
-    cookieStoreId: string;
-    constructor(name: string, proxyInfo: types.ProxyInfo, cookieStoreId: string) {
+    cookieStoreIds: string[];
+    constructor(name: string, proxyInfo: types.ProxyInfo, cookieStoreId: string[]) {
         super(name, proxyInfo);
-        this.cookieStoreId = cookieStoreId;
+        this.cookieStoreIds = cookieStoreId;
     }
 
     getProxyResult(summary: types.RequestSummary): types.ProxyResult {
@@ -13,7 +13,7 @@ export class ContainerGroup extends BaseRuleGroup {
             return types.ProxyResult.continue;
         }
         
-        if (summary.cookieStoreId === this.cookieStoreId) {
+        if (this.cookieStoreIds.includes(summary.cookieStoreId)) {
             return types.ProxyResult.proxy;
         }
 

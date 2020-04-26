@@ -1,11 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        body {
+            width: 30rem;
+        }
+
+        ul {
+            padding-inline-start: 20px;
+        }
+
+        li:first-child .move-up {
+            display: none;
+        }
+
+        li:last-child .move-down {
+            display: none;
+        }
+
+        .group-name {
+            width: 12rem;
+            display: inline-block;
+        }
+    </style>
 </head>
+
 <body>
+    <div>
+        <button id="open-options-btn">Open Options</button>
+        <button id="clear-cache-btn" data-firefox="">Clear Cache</button>
+        <button id="update-myip-btn" data-firefox="" style="display: none;">Update MyIp</button>
+    </div>
+    <div>
+        <ul>
+        </ul>
+    </div>
+    <template>
+        <li data-index="0">
+            <span class="group-name">Name</span>
+            <button class="move-up">
+                ↑
+            </button>
+            <button class="move-down">
+                ↓
+            </button>
+        </li>
+    </template>
     <script src="./index.js"></script>
 </body>
+
 </html>

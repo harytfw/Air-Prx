@@ -1,6 +1,6 @@
 
 import './pac-types';
-import Core, { buildProxyInfoMap, buildGroups } from "../bg/core";
+import { Core, buildProxyInfoMap, buildGroups } from "../bg/core";
 import { debugLog, extractDomainAndProtocol, enableDebugLog, disableDebugLog, ipToInt32, constructorName } from '../util'
 import { IpRuleGroup } from '../group';
 import * as types from '../types';

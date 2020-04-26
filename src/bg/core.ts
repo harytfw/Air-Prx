@@ -1,27 +1,26 @@
 
-import { extractDomainAndProtocol, ipToInt32, debugLog, enableDebugLog, disableDebugLog, buildCookieStoreIdMap, constructorName } from '../util'
 import * as types from '../types';
 import { Cache } from '../proxy-cache';
 import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../group'
 import { MyIpMatcher } from '../myip-matcher';
 import { ContainerGroup } from '../group/container-group';
-import { debuglog } from 'util';
+import { ipToInt32, debugLog, enableDebugLog, disableDebugLog, buildCookieStoreIdMap, constructorName, buildGroupSummary, clone, buildRequestSummary } from '../util'
+import { HistoryManager } from '../history-manager';
 
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 
 const CACHE_NAME = '__CACHE__';
 
-export default class Core {
+export class Core {
 
     groups: BaseRuleGroup[];
     proxyInfoMap: Map<string, types.ProxyInfo>;
     useCache: boolean;
     caches: Map<string, Cache<string, types.ProxyInfo>>;
     features: Set<types.Feature>;
-
     myIpMatcher: MyIpMatcher;
-
     tempDisable: boolean;
+    historyManager: HistoryManager;
 
     constructor() {
         this.groups = [];
@@ -32,6 +31,19 @@ export default class Core {
         this.tempDisable = false;
         this.myIpMatcher = new MyIpMatcher([], 0);
         this.caches = new Map();
+        this.historyManager = new HistoryManager();
+    }
+
+    destory() {
+        this.tempDisable = true;
+        this.groups = [];
+        this.proxyInfoMap.clear();
+        this.features.clear();
+        for(const cache of this.caches.values()) {
+            cache.clear();
+        }
+        this.caches.clear();
+        this.historyManager.destory();
     }
 
     sortAll() {
@@ -101,9 +113,7 @@ export default class Core {
             debugLog('current ip is not allowed to use proxy');
             return Promise.resolve(DIRECT_PROXYINFO);
         }
-
-        const summary = this.buildRequestSummary(requestInfo);
-
+        const summary = buildRequestSummary(requestInfo);
 
         let pInfo: types.ProxyInfo | null = null;
 
@@ -112,19 +122,19 @@ export default class Core {
         if (cache.has(key)) {
             pInfo = cache.get(key)!;
             debugLog('hit cache', 'key:', key, 'proxy info:', pInfo);
+            this.historyManager.addHitCache(summary);
             return Promise.resolve(pInfo);
         }
 
         for (const g of this.groups) {
-
             debugLog('check group', 'name:', g.name, 'type:', constructorName(g));
-
             if (g instanceof IpRuleGroup && typeof summary.ipAddress !== 'string') {
                 await this.fillIpAddress(summary);
             }
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
                 debugLog('proxy result: PROXY')
+                this.historyManager.addMatch(summary, g);
                 pInfo = this.resolveProxyInfo(g.proxyInfo);
                 break;
             } else if (result === types.ProxyResult.notProxy) {
@@ -138,6 +148,7 @@ export default class Core {
 
         if (pInfo === null) {
             debugLog(`didn't match any group, use DIRECT`)
+            this.historyManager.addNotMatch(summary);
             pInfo = DIRECT_PROXYINFO;
         }
 
@@ -149,35 +160,9 @@ export default class Core {
         return Promise.resolve(pInfo);
     }
 
-
-    buildRequestSummary(requestInfo) {
-        const [hostname, protocol] = extractDomainAndProtocol(requestInfo.url);
-        let siteHostName;
-        if (requestInfo.documentUrl) {
-            siteHostName = extractDomainAndProtocol(requestInfo.documentUrl)[0];
-        }
-        const summary: types.RequestSummary = {
-            url: requestInfo.url,
-
-            hostName: hostname,
-            protocol: protocol,
-
-            documentUrl: requestInfo.documentUrl,
-            documentHostName: siteHostName,
-            cookieStoreId: requestInfo.cookieStoreId,
-        }
-        return summary;
-    }
-
-
 }
 
 
-function comparator(a: types.GroupConfig, b: types.GroupConfig) {
-    let oa = a.order === undefined ? Number.MAX_SAFE_INTEGER : a.order;
-    let ob = b.order === undefined ? Number.MAX_SAFE_INTEGER : b.order;
-    return oa - ob;
-}
 
 export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<string, string>): BaseRuleGroup[] {
     debugLog('cookieStoreIdMap', cookieStoreIdMap);
@@ -185,7 +170,6 @@ export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<s
         debugLog('=====')
         debugLog('group: ' + g.name);
         debugLog('enable: ' + g.enable);
-        debugLog('order: ' + g.order);
         debugLog('subSource: ' + g.subSource)
         debugLog('subType: ' + g.subType)
         debugLog('matchType: ' + g.matchType)
@@ -195,7 +179,6 @@ export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<s
     }
     groups = groups
         .filter(g => g.enable)
-        .sort(comparator);
     const ruleGroups: BaseRuleGroup[] = [];
     for (const g of groups) {
         switch (g.matchType) {
@@ -229,12 +212,11 @@ export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<s
 }
 
 export function buildContainerGroup(groupConfig: types.GroupConfig, cookieStoreIdMap: Map<string, string>) {
-    const containerName = groupConfig.containerName ? groupConfig.containerName : '';
-    if (!cookieStoreIdMap.has(containerName)) {
-        debugLog(`not found container name:`, containerName);
-        return null;
-    }
-    return new ContainerGroup(groupConfig.name, groupConfig.proxyInfo, cookieStoreIdMap.get(containerName)!);
+    const names: string[] = groupConfig.rules ? groupConfig.rules : [];
+    const ids = names
+        .filter(name => cookieStoreIdMap.has(name))
+        .map(name => cookieStoreIdMap.get(name)!);
+    return new ContainerGroup(groupConfig.name, groupConfig.proxyInfo, ids);
 }
 
 export function buildProxyInfoMap(config: types.Configuration) {
@@ -256,6 +238,11 @@ export async function buildCore(config: types.Configuration): Promise<Core> {
     } else {
         disableDebugLog();
     }
+    if(core.features.has('history')) {
+        core.historyManager.enableLog();
+    } else {
+        core.historyManager.disableLog();
+    }
 
     debugLog('load from configuration');
     debugLog('features', core.features);
@@ -276,7 +263,7 @@ export async function buildCore(config: types.Configuration): Promise<Core> {
         if (typeof config.myIp === 'string') {
             core.myIpMatcher.setMyIp(ipToInt32(config.myIp));
         } else {
-            core.myIpMatcher.updateMyIp();
+            await core.updateMyIP();
         }
     }
     core.sortAll();

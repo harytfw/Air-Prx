@@ -3,6 +3,9 @@ import * as types from "./types";
 import stringify from 'stringify-object';
 import ipaddr from 'ipaddr.js';
 
+import _clone from 'lodash.clone';
+import { BaseRuleGroup } from "./group";
+
 export function lowerBound(array: string[], start: number, end: number, i: number, target: string, j: number) {
     if (start >= end) {
         return -1;
@@ -52,6 +55,9 @@ export function extractDomainAndProtocol(url: string) {
 
 export function ipToInt32(ip: string): number {
     let ipArr = ip.split('.').map(a => parseInt(a));
+    if (ipArr.length !== 4) {
+        throw new Error("incorrect ip format");
+    }
     let int32 = ipArr[0] << 24 | ipArr[1] << 16 | ipArr[2] << 8 | ipArr[3];
     return int32;
 }
@@ -143,4 +149,43 @@ export async function getMyIp(): Promise<string> {
 
 export function constructorName(obj: Object): string {
     return obj.constructor.name;
+}
+
+export function clone<T>(val: T): T {
+    return _clone(val);
+}
+
+export function buildGroupSummary(group: BaseRuleGroup): types.GroupSummary {
+    return {
+        name: group.name,
+        proxyInfo: group.proxyInfo,
+        matchType: constructorName(group),
+    }
+}
+
+export function buildRequestSummary(requestInfo) {
+    const [hostname, protocol] = extractDomainAndProtocol(requestInfo.url);
+    let siteHostName;
+    if (requestInfo.documentUrl) {
+        siteHostName = extractDomainAndProtocol(requestInfo.documentUrl)[0];
+    }
+    const summary: types.RequestSummary = {
+        url: requestInfo.url,
+
+        hostName: hostname,
+        protocol: protocol,
+
+        documentUrl: requestInfo.documentUrl,
+        documentHostName: siteHostName,
+        cookieStoreId: requestInfo.cookieStoreId,
+    }
+    return summary;
+}
+
+export function isFirefox() {
+    return !isChromium();
+}
+
+export function isChromium() {
+    return navigator.userAgent.includes("Chrome");
 }

@@ -5,24 +5,24 @@ import { debugLog } from '../util';
 
 async function proxyDocumentUrl(url: string) {
     const config: types.Configuration = await browser.storage.local.get();
-    let documentUrlGroup = config.groups.find(a => a.matchType === 'document_url');
-    if (!documentUrlGroup) {
+    let hostnamelGroup = config.groups.find(a => a.matchType === 'hostname');
+    if (!hostnamelGroup) {
         debugLog('generate document_url group')
-        documentUrlGroup = {
+        hostnamelGroup = {
             name: 'AUTO GENERATED',
             enable: true,
-            matchType: 'document_url',
+            matchType: 'hostname',
             proxyInfo: {
                 type: 'direct'
             }
         }
-        config.groups.push(documentUrlGroup);
+        config.groups.push(hostnamelGroup);
     }
     debugLog('add url', url);
-    if (Array.isArray(documentUrlGroup.rules)) {
-        documentUrlGroup.rules.push(url);
+    if (Array.isArray(hostnamelGroup.rules)) {
+        hostnamelGroup.rules.push(url);
     } else {
-        documentUrlGroup.rules = [url];
+        hostnamelGroup.rules = [url];
     }
     browser.storage.local.set(config);
 }

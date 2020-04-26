@@ -1,6 +1,8 @@
 
 import browser from 'webextension-polyfill/dist/browser-polyfill.js';
+import * as types from '../types';
 import { debugLog } from "../util";
+
 declare const chrome;
 
 async function generatePAC(config) {
@@ -18,9 +20,12 @@ async function generatePAC(config) {
     return js;
 }
 
+function onProxyError(err) {
+    console.error(err);
+}
+
 async function init() {
     const config = await browser.storage.local.get();
-    console.log(config);
     const pac = await generatePAC(config);
     const settingConfig = {
         mode: "pac_script",
@@ -28,10 +33,9 @@ async function init() {
             data: pac,
         }
     };
-    chrome.proxy.onProxyError.addListener(err => {
-        console.error(err);
-    });
-    debugLog('set PAC');
+    chrome.proxy.onProxyError.removeListener(onProxyError);
+    chrome.proxy.onProxyError.addListener(onProxyError);
+    debugLog('configure proxy setting');
     chrome.proxy.settings.set(
         { value: settingConfig, scope: 'regular' },
         function (...args) {
@@ -45,6 +49,13 @@ export function init_chromium() {
     console.log('init chromium');
     browser.storage.onChanged.addListener((changes, areaName) => {
         init()
+    });
+    browser.runtime.onMessage.addListener((msg: types.ExtEventMessage, _, sendResponse) => {
+        console.log(msg);
+        if (msg.name === 'clearCache') {
+            init();
+            debugLog('clear cache done');
+        }
     });
     init();
 }

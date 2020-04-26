@@ -185,9 +185,6 @@ function addMissingProperty(config: { features?: [], groups?: types.GroupConfig[
         if (!hasProp(g, 'matchType')) {
             g.matchType = 'void';
         }
-        if (!hasProp(g, 'order')) {
-            g.order = 0;
-        }
     }
 }
 

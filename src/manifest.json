@@ -11,6 +11,11 @@
         "open_in_tab": true,
         "browser_style": true
     },
+    "browser_action": {
+        "browser_style": false,
+        "default_title": "Fast PAC",
+        "default_popup": "popup/popup.html"
+    },
     "permissions": [
         "proxy",
         "cookies",
