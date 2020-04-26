@@ -29,17 +29,13 @@ function formateProxyInfo(proxyInfo: types.ProxyInfo) {
     return 'DIRECT'
 }
 
-
 let core: PacCore | null = null;
 
 function init_PAC() {
-
-    //START_REPLACE
-    let config = null as any;
-    if (config === null) {
-        throw new Error('PLEASE REPLACE THIS BLOCK');
+    let config = "TO_REPLACE" as any;
+    if (typeof config === "string") {
+        throw new Error('PLEASE REPLACE CONFIG');
     }
-    //END_REPLACE
     debugLog(config);
     core = buildPacCore(config);
     debugLog('success build pac core');

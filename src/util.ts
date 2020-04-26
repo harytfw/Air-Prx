@@ -3,7 +3,6 @@ import * as types from "./types";
 import stringify from 'stringify-object';
 import ipaddr from 'ipaddr.js';
 
-import _clone from 'lodash.clone';
 import { BaseRuleGroup } from "./group";
 
 export function lowerBound(array: string[], start: number, end: number, i: number, target: string, j: number) {
@@ -152,7 +151,7 @@ export function constructorName(obj: Object): string {
 }
 
 export function clone<T>(val: T): T {
-    return _clone(val);
+    return JSON.parse(JSON.stringify(val));
 }
 
 export function buildGroupSummary(group: BaseRuleGroup): types.GroupSummary {

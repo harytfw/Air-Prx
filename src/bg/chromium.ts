@@ -9,15 +9,10 @@ async function generatePAC(config) {
 
     const fileURL = chrome.runtime.getURL('./pac/pac.js');
     let js = await fetch(fileURL).then(a => a.text());
-
-    const MARKER_START = '//START_REPLACE';
-    const MARKER_END = '//END_REPLACE';
-    js =
-        js.substring(0, js.indexOf(MARKER_START))
-        + `\n;let config = ${JSON.stringify(config)};\n`
-        + js.substring(js.indexOf(MARKER_END) + MARKER_END.length);
-
+    js = js.replace(`"TO_REPLACE"`, JSON.stringify(config));
+    console.log(js);
     return js;
+
 }
 
 function onProxyError(err) {

@@ -1,6 +1,7 @@
 const path = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
 const webpack = require('webpack');
+const CopyPlugin = require('copy-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 module.exports = {
     entry: {
         'bg/main': './src/bg/main.ts',
@@ -8,6 +9,16 @@ module.exports = {
         'options/result': './src/options/result.ts',
         'popup/index': './src/popup/index.ts',
         'pac/pac': './src/pac/pac.ts',
+    },
+    optimization: {
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    mangle: false, // Note `mangle.properties` is `false` by default.
+                    compress: false,
+                },
+            }),
+        ],
     },
     target: 'node',
     mode: 'development',
