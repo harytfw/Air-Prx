@@ -102,18 +102,18 @@ export function isCIDRV6Match(cidr: types.CIDR_V6, ip: types.int128) {
 }
 
 export function enableDebugLog() {
-    (globalThis as any).debug = true;
+    globalThis.debug = true;
 }
 
 export function disableDebugLog() {
-    (globalThis as any).debug = false;
+    globalThis.debug = false;
 }
 
 export function debugLog(...args) {
-    if (typeof window === 'object' && (window as any).debug === true) {
+    if (typeof window === 'object' && globalThis.debug === true) {
         console.debug(...args);
     }
-    if (typeof window === 'undefined') { // PAC
+    if (typeof window === 'undefined' && globalThis.debug === true) { // PAC
         if (args.length === 1) {
             alert(stringify(args[0]));
         } else {
@@ -130,7 +130,6 @@ export async function buildCookieStoreIdMap() {
     }
     return map;
 }
-
 
 export function isPAC() {
     return typeof window === 'undefined';
