@@ -2,8 +2,10 @@ import * as types from '../types';
 import { isFirefox } from '../util';
 import browser from 'webextension-polyfill/dist/browser-polyfill.js';
 
-function getHostname() {
-    const hostname = (new URL(location.href)).hostname;
+async function getHostname() {
+    const tab = (await browser.tabs.query({ active: true }))[0]
+    console.log(tab);
+    const hostname = (new URL(tab.url)).hostname;
     return hostname;
 }
 
@@ -65,7 +67,7 @@ async function initGroupList() {
     while (tbody.firstElementChild) {
         tbody.firstElementChild.remove();
     }
-    const hostname = getHostname();
+    const hostname = await getHostname();
     const template = document.querySelector("template")!;
     const config = await browser.storage.local.get() as types.Configuration;
     let index = 0;
@@ -77,7 +79,8 @@ async function initGroupList() {
         index += 1;
         const checkbox = row.querySelector(".add-hostname") as HTMLInputElement;
         if (group.matchType === 'hostname') {
-            checkbox.style.visibility = "";
+            checkbox.classList.remove("hide-add-hostname");
+            console.log(checkbox.className);
             checkbox.checked = group.rules ? group.rules.includes(hostname) : false;
         }
         tbody?.appendChild(row);
@@ -115,7 +118,8 @@ function onInputChange(event: Event) {
         if (input.type === "checkbox") {
             const row = input.closest("tr")!;
             const index = parseInt(row.dataset["index"]!);
-            if (input.checked) {
+            console.log(index);
+            if (!input.checked) {
                 removeHostnameFromGroup(index);
             } else {
                 addHostnameToGroup(index);
@@ -126,17 +130,25 @@ function onInputChange(event: Event) {
 
 async function addHostnameToGroup(index: number) {
     const config = await browser.storage.local.get("groups") as types.Configuration;
-    const hostname = getHostname();
-    console.log("add hostname:", hostname, "to", config.groups[index]);
-    config.groups[index].rules?.push(hostname);
+    const hostname = await getHostname();
+    const group = config.groups[index];
+    console.log("add hostname:", hostname, "to", group);
+    if (Array.isArray(group.rules)) {
+        group.rules.push(hostname);
+    } else {
+        group.rules = [hostname];
+    }
     browser.storage.local.set(config);
 }
 
 async function removeHostnameFromGroup(index: number) {
     const config = await browser.storage.local.get("groups") as types.Configuration;
-    const hostname = getHostname();
-    console.log("remove hostname:", hostname, "from", config.groups[index]);
-    config.groups[index].rules?.filter(rule => rule !== hostname);
+    const hostname = await getHostname();
+    const group = config.groups[index];
+    console.log("remove hostname:", hostname, "from", group);
+    if (group.rules) {
+        group.rules.filter(rule => rule !== hostname);
+    }
     browser.storage.local.set(config);
 }
 

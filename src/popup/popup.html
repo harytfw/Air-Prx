@@ -10,16 +10,12 @@
             width: 30rem;
         }
 
-        ol {
-            padding-inline-start: 1.5rem;
+        tr:first-child .move-up {
+            display: none;
         }
 
-        li:first-child .move-up {
-            visibility: hidden;
-        }
-
-        li:last-child .move-down {
-            visibility: visible;
+        tr:last-child .move-down {
+            display: none;
         }
 
         .group-name {
@@ -27,7 +23,7 @@
             display: inline-block;
         }
 
-        .add-hostname {
+        .hide-add-hostname {
             visibility: hidden;
         }
     </style>
@@ -49,9 +45,6 @@
                     <td>
                         操作
                     </td>
-                    <td>
-                        
-                    </td>
                 </tr>
             </thead>
             <tbody>
@@ -67,15 +60,14 @@
                 <span class="group-name">Name</span>
             </td>
             <td>
-                <button class="move-up">
-                    ↑
-                </button>
                 <button class="move-down">
                     ↓
                 </button>
-            </td>
-            <td>
-                <input class="add-hostname" type="checkbox">
+
+                <button class="move-up">
+                    ↑
+                </button>
+                <input class="add-hostname hide-add-hostname" type="checkbox">
             </td>
         </tr>
     </template>

@@ -18,6 +18,7 @@
     },
     "permissions": [
         "proxy",
+        "tabs",
         "cookies",
         "storage",
         "dns",
