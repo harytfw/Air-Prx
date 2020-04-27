@@ -1,7 +1,7 @@
 
 import './types';
 import { Core, buildProxyInfoMap, buildGroups } from "../bg/core";
-import { debugLog, extractDomainAndProtocol, enableDebugLog, disableDebugLog, ipToInt32, constructorName } from '../util'
+import { debugLog, extractDomainAndProtocol, enableDebugLog, disableDebugLog, ipToInt32, constructorName, toCIDR } from '../util'
 import { IpRuleGroup } from '../group';
 import * as types from '../types';
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
@@ -64,7 +64,7 @@ export class PacCore extends Core {
         if (this.useCache) {
             cache.set(key, pInfo);
         }
-        
+
         return pInfo;
     }
 }
@@ -91,6 +91,7 @@ export function buildPacCore(config: types.Configuration) {
     core.groups.push(...buildGroups(config.groups, new Map()));
     if (core.features.has('limit_my_ip')) {
         const myIpList = config.myIpList ? config.myIpList : []
+        core.myIpMatcher.setMyIpList(myIpList.map(toCIDR));
         if (typeof config.myIp === 'string') {
             core.myIpMatcher.setMyIp(ipToInt32(config.myIp));
         }

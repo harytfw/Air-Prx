@@ -29,7 +29,7 @@ export class Core {
         // this.persistedLogger = new PersistedLogger('log');
         this.features = new Set();
         this.tempDisable = false;
-        this.myIpMatcher = new MyIpMatcher([], 0);
+        this.myIpMatcher = new MyIpMatcher();
         this.caches = new Map();
         this.historyManager = new HistoryManager();
     }

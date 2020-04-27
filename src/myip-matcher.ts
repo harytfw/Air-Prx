@@ -5,9 +5,9 @@ export class MyIpMatcher {
     myIp: number;
     myIpList: types.CIDR[];
 
-    constructor(myIpList: string[], myIp: number) {
-        this.myIp = myIp ? myIp : 0;
-        this.myIpList = myIpList.map(toCIDR);
+    constructor() {
+        this.myIp = 0;
+        this.myIpList = [];
     }
 
     isAllow() {
