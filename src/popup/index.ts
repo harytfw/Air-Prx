@@ -1,6 +1,12 @@
 import * as types from '../types';
 import { isFirefox } from '../util';
 import browser from 'webextension-polyfill/dist/browser-polyfill.js';
+
+function getHostname() {
+    const hostname = (new URL(location.href)).hostname;
+    return hostname;
+}
+
 function openOptionsPage() {
     browser.runtime.openOptionsPage();
 }
@@ -14,11 +20,15 @@ function updateMyIp() {
 }
 
 function hideEl(selector: string) {
-    (document.querySelector(selector)! as HTMLElement).style.display = 'none';
+    (document.querySelector(selector) as HTMLElement).style.display = 'none';
 }
 
-function showEl(selector) {
-    (document.querySelector(selector)! as HTMLElement).style.display = '';
+function showEl(selector: string) {
+    (document.querySelector(selector) as HTMLElement).style.display = '';
+}
+
+function setVisiable(selector: string, b: boolean) {
+    (document.querySelector(selector) as HTMLElement).style.visibility = b ? "visiable" : "hidden";
 }
 
 async function groupConfigMoveUp(index: number) {
@@ -51,20 +61,26 @@ async function groupConfigMoveDown(index: number) {
 
 async function initGroupList() {
     console.log("init group list");
-    const ul = document.querySelector("ul")!;
-    while (ul.firstElementChild) {
-        ul.firstElementChild.remove();
+    const tbody = document.querySelector("tbody")!;
+    while (tbody.firstElementChild) {
+        tbody.firstElementChild.remove();
     }
+    const hostname = getHostname();
     const template = document.querySelector("template")!;
     const config = await browser.storage.local.get() as types.Configuration;
     let index = 0;
     for (const group of config.groups) {
         const cloned = template.content.cloneNode(true) as HTMLFrameElement;
-        const li = cloned.querySelector("li")!;
-        li.dataset['index'] = `${index}`;
-        li.querySelector(".group-name")!.textContent = group.name;
+        const row = cloned.querySelector("tr")!;
+        row.dataset['index'] = `${index}`;
+        row.querySelector(".group-name")!.textContent = group.name;
         index += 1;
-        ul?.appendChild(li);
+        const checkbox = row.querySelector(".add-hostname") as HTMLInputElement;
+        if (group.matchType === 'hostname') {
+            checkbox.style.visibility = "";
+            checkbox.checked = group.rules ? group.rules.includes(hostname) : false;
+        }
+        tbody?.appendChild(row);
     }
 }
 
@@ -72,37 +88,68 @@ async function initGroupList() {
 function onULClick(event: MouseEvent) {
     if (event.target instanceof HTMLButtonElement) {
         const btn = event.target;
-        const li = btn.closest("li")!;
-        const ul = li.parentElement!;
-        const index = parseInt(li.dataset["index"]!);
+        const row = btn.closest("tr")!;
+        const tbody = row.parentElement!;
+        const index = parseInt(row.dataset["index"]!);
         if (btn.classList.contains("move-up")) {
             if (groupConfigMoveUp(index)) {
-                const prev = li.previousElementSibling as HTMLLIElement;
-                li.dataset["index"] = `${index - 1}`;
+                const prev = row.previousElementSibling as HTMLLIElement;
+                row.dataset["index"] = `${index - 1}`;
                 prev.dataset["index"] = `${index}`
-                ul.insertBefore(li, prev);
+                tbody.insertBefore(row, prev);
             }
         } else if (btn.classList.contains("move-down")) {
             if (groupConfigMoveDown(index)) {
-                const next = li.nextElementSibling as HTMLLIElement;
-                li.dataset["index"] = `${index + 1}`;
+                const next = row.nextElementSibling as HTMLLIElement;
+                row.dataset["index"] = `${index + 1}`;
                 next.dataset["index"] = `${index}`
-                ul.insertBefore(next, li);
+                tbody.insertBefore(next, row);
             }
         }
     }
 }
 
+function onInputChange(event: Event) {
+    if (event.target instanceof HTMLInputElement) {
+        const input = event.target;
+        if (input.type === "checkbox") {
+            const row = input.closest("tr")!;
+            const index = parseInt(row.dataset["index"]!);
+            if (input.checked) {
+                removeHostnameFromGroup(index);
+            } else {
+                addHostnameToGroup(index);
+            }
+        }
+    }
+}
+
+async function addHostnameToGroup(index: number) {
+    const config = await browser.storage.local.get("groups") as types.Configuration;
+    const hostname = getHostname();
+    console.log("add hostname:", hostname, "to", config.groups[index]);
+    config.groups[index].rules?.push(hostname);
+    browser.storage.local.set(config);
+}
+
+async function removeHostnameFromGroup(index: number) {
+    const config = await browser.storage.local.get("groups") as types.Configuration;
+    const hostname = getHostname();
+    console.log("remove hostname:", hostname, "from", config.groups[index]);
+    config.groups[index].rules?.filter(rule => rule !== hostname);
+    browser.storage.local.set(config);
+}
 
 async function init() {
     console.log("init");
     document.querySelector("#open-options-btn")!.addEventListener("click", openOptionsPage);
     document.querySelector("#clear-cache-btn")!.addEventListener("click", clearCache);
     document.querySelector("#update-myip-btn")!.addEventListener("click", updateMyIp);
-    document.querySelector("ul")!.addEventListener("click", onULClick);
+    document.querySelector("table")!.addEventListener("click", onULClick);
+    document.querySelector("table")!.addEventListener("change", onInputChange);
     const config = await browser.storage.local.get() as types.Configuration;
     if (isFirefox() && config.features.includes("limit_my_ip")) {
-        showEl('#update-myip-btn');
+        setVisiable('#update-myip-btn', true);
     }
     initGroupList();
 }

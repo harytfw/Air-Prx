@@ -15,16 +15,20 @@
         }
 
         li:first-child .move-up {
-            display: none;
+            visibility: hidden;
         }
 
         li:last-child .move-down {
-            display: none;
+            visibility: visible;
         }
 
         .group-name {
             width: 12rem;
             display: inline-block;
+        }
+
+        .add-hostname {
+            visibility: hidden;
         }
     </style>
 </head>
@@ -36,19 +40,44 @@
         <button id="update-myip-btn" data-firefox="" style="display: none;">Update MyIp</button>
     </div>
     <div>
+        <table>
+            <thead>
+                <tr>
+                    <td>
+                        名称
+                    </td>
+                    <td>
+                        操作
+                    </td>
+                    <td>
+                        
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
         <ol>
         </ol>
     </div>
     <template>
-        <li data-index="0">
-            <span class="group-name">Name</span>
-            <button class="move-up">
-                ↑
-            </button>
-            <button class="move-down">
-                ↓
-            </button>
-        </li>
+        <tr data-index="0">
+            <td>
+                <span class="group-name">Name</span>
+            </td>
+            <td>
+                <button class="move-up">
+                    ↑
+                </button>
+                <button class="move-down">
+                    ↓
+                </button>
+            </td>
+            <td>
+                <input class="add-hostname" type="checkbox">
+            </td>
+        </tr>
     </template>
     <script src="./index.js"></script>
 </body>
