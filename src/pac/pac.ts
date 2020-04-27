@@ -1,4 +1,4 @@
-import './pac-types';
+import './types';
 import * as types from '../types';
 import { PacCore, buildPacCore } from './pac-core';
 import { debugLog } from '../util';
