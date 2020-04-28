@@ -3,11 +3,9 @@ import { BaseRuleGroup } from './base-rule-group';
 import { ipToInt32, debugLog, toCIDR } from '../util';
 export class IpRuleGroup extends BaseRuleGroup {
 
-    internalIpAddress: string[];
     ipMask: types.CIDR[];
     constructor(name: string, proxyInfo: types.ProxyInfo, ipList: string[]) {
         super(name, proxyInfo);
-        this.internalIpAddress = [];
         this.ipMask = [];
         for (const ip of ipList) {
             this.addIpAddress(ip);
