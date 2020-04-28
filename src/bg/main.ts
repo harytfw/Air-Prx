@@ -1,5 +1,3 @@
-
-
 import { init_firefox } from './firefox';
 import { init_chromium } from './chromium';
 import { isChromium } from '../util';
