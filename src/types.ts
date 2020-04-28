@@ -43,6 +43,7 @@ export interface GroupSummary {
 }
 
 export type Feature = 'limit_my_ip' | 'ipv6' | 'debug' | 'container' | 'history';
+export const ALL_FEATURES: Feature[] = ['limit_my_ip', 'ipv6', 'history', 'debug', 'container'];
 
 export interface Configuration {
     features: Feature[]

@@ -25,14 +25,6 @@ const editor = CodeMirror(document.body.querySelector('#editor')! as HTMLDivElem
 
 
 editor.on('change', () => {
-    console.log(editor.getCursor());
-    const lineCount = editor.lineCount();
-    for (let n = 0; n < lineCount; n++) {
-        const line = editor.getLine(n);
-        if (line.includes("rules")) {
-            (editor as any).foldCode({ line: n, ch: 0 })
-        }
-    }
     updateButtons(false);
 })
 
@@ -129,6 +121,13 @@ function exportFn() {
 }
 
 async function validate() {
+    const lineCount = editor.lineCount();
+    for (let n = 0; n < lineCount; n++) {
+        const line = editor.getLine(n);
+        if (line.includes("rules")) {
+            (editor as any).foldCode({ line: n, ch: 0 })
+        }
+    }
     let err;
     try {
         const obj = JSON.parse(editor.getValue()) as types.Configuration;
