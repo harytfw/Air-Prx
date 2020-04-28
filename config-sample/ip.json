@@ -1,0 +1,27 @@
+{
+    "features": [],
+    "groups": [
+        {
+            "name": "ip group",
+            "enable": true,
+            "matchType": "ip",
+            "proxyInfo": {
+                "type": "http",
+                "host": "127.0.0.1",
+                "port": 1081
+            },
+            "rules": [
+                "1.2.3.4/16",
+                "2.3.4.5/24"
+            ]
+        },
+        {
+            "name": "void group",
+            "enable": true,
+            "matchType": "void",
+            "proxyInfo": {
+                "type": "direct"
+            }
+        }
+    ]
+}

@@ -1,0 +1,28 @@
+{
+    "features": [],
+    "groups": [
+        {
+            "name": "获取gfwlist.txt",
+            "//": "获取gfwlist.txt需要代理。先保存，让这条规则组生效，再同步规则组。获取到gfwlist.txt后，修改 enable 为 false，关闭本规则组",
+            "enable": true,
+            "matchType": "void",
+            "proxyInfo": {
+                "refId": "gfw-proxy"
+            }
+        },
+        {
+            "name": "gfw",
+            "enable": true,
+            "matchType": "std",
+            "proxyInfo": {
+                "id": "gfw-proxy",
+                "type": "http",
+                "host": "127.0.0.1",
+                "port": 1081
+            },
+            "subType": "base64_gfw",
+            "subSource": "https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt",
+            "rules": []
+        }
+    ]
+}

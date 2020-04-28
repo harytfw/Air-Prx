@@ -1,0 +1,32 @@
+{
+    "features": [
+        "container"
+    ],
+    "groups": [
+        {
+            "name": "container group",
+            "enable": true,
+            "matchType": "container",
+            "proxyInfo": {
+                "type": "http",
+                "host": "127.0.0.1",
+                "port": 1081
+            },
+            "rules": [
+                "ContainerName"
+            ],
+            "subType": "",
+            "subSource": ""
+        },
+        {
+            "name": "void group",
+            "enable": true,
+            "matchType": "void",
+            "proxyInfo": {
+                "type": "direct"
+            },
+            "subType": "",
+            "subSource": ""
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "features": [],
+    "groups": [
+        {
+            "name": "void",
+            "enable": true,
+            "matchType": "void",
+            "proxyInfo": {
+                "type": "http",
+                "host": "127.0.0.1",
+                "port": 1081
+            },
+            "subType": "",
+            "subSource": ""
+        }
+    ]
+}

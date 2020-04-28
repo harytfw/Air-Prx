@@ -1,0 +1,23 @@
+{
+    "features": [
+        "limit_my_ip"
+    ],
+    "groups": [
+        {
+            "name": "void group",
+            "enable": true,
+            "matchType": "void",
+            "proxyInfo": {
+                "type": "http",
+                "host": "127.0.0.1",
+                "port": 1081
+            },
+            "subType": "",
+            "subSource": "",
+        }
+    ],
+    "myIpList": [
+        "192.168.1.1/24",
+        "123.12.3.0/24"
+    ]
+}

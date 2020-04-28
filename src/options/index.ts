@@ -11,7 +11,7 @@ import 'codemirror/addon/fold/foldgutter';
 
 import browser from 'webextension-polyfill/dist/browser-polyfill.js';
 import * as types from '../types';
-import { debugLog, buildCookieStoreIdMap } from '../util';
+import { debugLog, buildCookieStoreIdMap, enableDebugLog } from '../util';
 import { syncGroup, syncConfig } from '../syncUtil';
 
 const editor = CodeMirror(document.body.querySelector('#editor')! as HTMLDivElement, {
@@ -25,6 +25,14 @@ const editor = CodeMirror(document.body.querySelector('#editor')! as HTMLDivElem
 
 
 editor.on('change', () => {
+    console.log(editor.getCursor());
+    const lineCount = editor.lineCount();
+    for (let n = 0; n < lineCount; n++) {
+        const line = editor.getLine(n);
+        if (line.includes("rules")) {
+            (editor as any).foldCode({ line: n, ch: 0 })
+        }
+    }
     updateButtons(false);
 })
 
@@ -77,12 +85,22 @@ async function onSync() {
         return;
     }
     debugLog('before synchronize', JSON.parse(JSON.stringify(config)));
+    let err = '';
     for (const plainGroup of config.groups) {
-        await syncGroup(plainGroup);
+        try {
+            await syncGroup(plainGroup);
+        }
+        catch (ex) {
+            err += `Can not synchronize group "${plainGroup.name}" : ${ex}\n`;
+        }
+    }
+    if (err !== '') {
+        showMsg(err);
+    } else {
+        showMsg('synchronize subscription done', 5000);
     }
     editor.setValue(JSON.stringify(config, null, 2));
     debugLog('after synchronize', config);
-    showMsg('synchronize subscription done', 5000);
 }
 
 
@@ -196,6 +214,7 @@ async function showContainer() {
 
 
 function init() {
+    enableDebugLog();
 
     window.onunhandledrejection = (ex) => {
         showMsg(JSON.stringify(ex));

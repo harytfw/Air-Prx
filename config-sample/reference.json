@@ -1,0 +1,31 @@
+{
+    "features": [],
+    "groups": [
+        {
+            "name": "home group",
+            "enable": true,
+            "matchType": "hostname",
+            "proxyInfo": {
+                "id": "myProxyInfo",
+                "type": "http",
+                "host": "127.0.0.1",
+                "port": 1081
+            },
+            "rules": [
+                "www.google.com"
+            ]
+        },
+        {
+            "name": "company group",
+            "enable": true,
+            "matchType": "hostname",
+            "proxyInfo": {
+                "refId": "myProxyInfo"
+            },
+            "rules": [
+                "youtube.com"
+            ]
+        }
+    ],
+    "subSource": "example.com/sub.json"
+}

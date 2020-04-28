@@ -125,190 +125,23 @@ socks5协议代理
 
 ### 全局代理
 
-```json
-{
-
-  "features": [],
-  "groups": [
-    {
-      "name": "void",
-      "enable": true,
-      "matchType": "void",
-      "proxyInfo": {
-        "type": "http",
-        "host": "127.0.0.1",
-        "port": 1081
-      },
-      "subType": "",
-      "subSource": ""
-    }
-  ]
-}
-```
 
 ### 匹配IP地址
-```json
-{
 
-  "features": [],
-  "groups": [
-    {
-      "name": "ip group",
-      "enable": true,
-      "matchType": "ip",
-      "proxyInfo": {
-        "type": "http",
-        "host": "127.0.0.1",
-        "port": 1081
-      },
-      "rules":[
-        "1.2.3.4/16",
-        "2.3.4.5/24",
-      ],
-      "subType": "",
-      "subSource": ""
-    },
-    {
-      "name": "void group",
-      "enable": true,
-      "matchType": "void",
-      "proxyInfo": {
-        "type": "direct"
-      },
-      "subType": "",
-      "subSource": ""
-    }
-  ]
-}
-```
 
 ### Container 容器
-```json
-{
 
-  "features": ["container"],
-  "groups": [
-    {
-      "name": "container group",
-      "enable": true,
-      "matchType": "container",
-      "proxyInfo": {
-        "type": "http",
-        "host": "127.0.0.1",
-        "port": 1081
-      },
-      "rules":["ContainerName"],
-      "subType": "",
-      "subSource": ""
-    },
-    {
-      "name": "void group",
-      "enable": true,
-      "matchType": "void",
-      "proxyInfo": {
-        "type": "direct"
-      },
-      "subType": "",
-      "subSource": ""
-    }
-  ]
-}
-```
 
 
 ### 引用代理信息
 
-```json
-{
 
-  "features": [],
-  "groups": [
-    {
-      "name": "home group",
-      "enable": true,
-      "matchType": "void",
-      "proxyInfo": {
-        "id": "myProxyInfo",
-        "type": "http",
-        "host": "127.0.0.1",
-        "port": 1081
-      },
-      "rules":["www.google.com"],
-      "subType": "",
-      "subSource": "",
-      "matchType": "hostname"
-    },
-    {
-      "name": "company group",
-      "enable": true,
-      "matchType": "hostname",
-      "proxyInfo": {
-        "refId": "myProxyInfo",
-      },
-      "rules":["youtube.com"],
-      "subType": "",
-      "subSource": "",
-    }
-  ],
-  "subSource": "example.com/sub.json"
-}
-```
 
 ### 限制我的IP
-```json
-{
 
-  "features": ["limit_my_ip"],
-  "groups": [
-    {
-      "name": "void group",
-      "enable": true,
-      "matchType": "void",
-      "proxyInfo": {
-        "type": "http",
-        "host": "127.0.0.1",
-        "port": 1081
-      },
-      "subType": "",
-      "subSource": "",
-      "matchType": "void"
-    }
-  ],
-  "myIpList": [
-    "192.168.1.1/24",
-    "123.12.3.0/24"
-  ]
-}
-```
 
 ### 订阅
 
-```json
-{
-
-  "features": [],
-  "groups": [
-    {
-      "name": "void",
-      "enable": true,
-      "matchType": "void",
-      "proxyInfo": {
-        "type": "http",
-        "host": "127.0.0.1",
-        "port": 1081
-      },
-      "subType": "autoproxy",
-      "subSource": "http://example.com/autoproxy.txt",
-      "rules":[]
-    }
-  ]
-}
-```
-```json
-{
-  "subSource": "example.com/sub.json"
-}
-```
 
 
 # 如何在 Chrome 上使用带授权的 HTTP 代理或 SOCKS 代理

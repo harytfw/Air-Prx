@@ -75,7 +75,7 @@ function checkSubSource(group: types.GroupConfig) {
     }
     try {
         new URL(group.subSource);
-    } catch(ex) {
+    } catch (ex) {
         throw new Error('subscription source should be a valid URL');
     }
 }
@@ -84,6 +84,8 @@ export async function syncGroup(group: types.GroupConfig) {
     let rules: string[] = [];
     debugLog('update subscription ', group);
     switch (group.subType) {
+        case undefined:
+            break;
         case 'builtin_gfw':
             rules = await loadBuiltinGFW();
             break;
@@ -107,8 +109,7 @@ export async function syncGroup(group: types.GroupConfig) {
             rules = await loadRemoteGFW(group.subSource!);
             break;
         default:
-            debugLog('do not support this subscription type', group.subType);
-            break;
+            throw new Error(`not supported subscription type: ${group.subType}`)
     }
     if (rules.length > 0) {
         group.rules = rules;
