@@ -19,7 +19,10 @@ export class IpRuleGroup extends BaseRuleGroup {
     }
 
     getProxyResult(summary: types.RequestSummary) {
-        const int32Ip = ipToInt32(summary.ipAddress!);
+        if (typeof summary.ipAddress === 'undefined') {
+            return types.ProxyResult.continue;
+        }
+        const int32Ip = ipToInt32(summary.ipAddress);
         for (const mask of this.ipMask) {
             if ((mask[1] & int32Ip) === mask[0]) {
                 return types.ProxyResult.proxy;
