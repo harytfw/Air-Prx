@@ -51,6 +51,7 @@ async function setConfig(config: types.Configuration, sync = false) {
 
 async function loadSync() {
     editor.setValue(JSON.stringify(await getConfig()));
+    buildSubscriptionOptions();
 }
 
 async function saveSync() {
@@ -61,6 +62,7 @@ async function saveSync() {
 async function load() {
     const json = JSON.stringify(await getConfig(), null, 2);
     editor.setValue(json);
+    buildSubscriptionOptions();
     debugLog('load config');
 }
 
@@ -90,6 +92,7 @@ async function onSync() {
         showMsg('synchronize subscription done', 5000);
     }
     editor.setValue(JSON.stringify(config, null, 2));
+    buildSubscriptionOptions();
     debugLog('after synchronize', config);
 }
 
@@ -98,6 +101,7 @@ async function onSyncConfig() {
     const cloned = JSON.parse(editor.getValue()) as types.Configuration;
     await syncConfig(cloned, 0);
     editor.setValue(JSON.stringify(cloned));
+    buildSubscriptionOptions();
 }
 
 
@@ -118,6 +122,23 @@ function exportFn() {
     }, 60 * 1000);
 }
 
+function importFn() {
+    const fileChooser = document.querySelector('#file-chooser') as HTMLInputElement;
+    fileChooser.onchange = async () => {
+        const files = fileChooser.files;
+
+        if (files == null || files.length <= 0) {
+            return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            editor.setValue(reader.result ? reader.result as string : '');
+        }
+        reader.readAsText(files[0]);
+    }
+    fileChooser.click();
+}
+
 async function validate() {
     const lineCount = editor.lineCount();
     for (let n = 0; n < lineCount; n++) {
@@ -132,6 +153,7 @@ async function validate() {
         addMissingProperty(obj as any);
         const json = JSON.stringify(obj, null, 2);
         editor.setValue(json);
+        buildSubscriptionOptions();
     } catch (ex) {
         console.error(ex);
         err = ex.toString();
@@ -209,6 +231,19 @@ async function showContainer() {
     showMsg(msg);
 }
 
+function buildSubscriptionOptions() {
+    const config = JSON.parse(editor.getValue()) as types.Configuration;
+    if (Array.isArray(config.subscriptions)) {
+        const select = document.querySelector("#subscriptions") as HTMLSelectElement;
+        while (select?.firstElementChild) {
+            select.firstElementChild.remove();
+        }
+        for (const sub of config.subscriptions) {
+            const opt = new Option(sub, sub);
+            select.appendChild(opt);
+        }
+    }
+}
 
 function init() {
     enableDebugLog();
@@ -224,6 +259,7 @@ function init() {
     $('#load-btn')?.addEventListener('click', load);
     $('#validate-btn')?.addEventListener('click', validate);
     $('#export-btn')?.addEventListener('click', exportFn);
+    $('#import-btn')?.addEventListener('click', importFn);
     $('#save-btn')?.addEventListener('click', save);
     $('#save-sync-syn')?.addEventListener('click', saveSync);
     $('#load-sync-syn')?.addEventListener('click', loadSync);

@@ -13,20 +13,31 @@
         <a href="./result.html">View Proxy Result</a>
     </div>
     <div>
-        <button id="load-btn">Load</button>
-        <button id="validate-btn">Validate & Format</button>
-        <button id="save-btn">Save</button>
-        <button id="sync-btn">Synchronize</button>
-        <button id="sync-config-btn">Synchronize Configuration</button>
-        <button id="load-sync-btn">Load From Sync Storage</button>
-        <button id="save-sync-btn">Save To Sync Storage</button>
-        <button id="export-btn">Export</button>
-        <button id="show-container-btn">Show Container</button>
+        <div>
+            <button id="load-btn">Load</button>
+            <button id="validate-btn">Validate & Format</button>
+            <button id="save-btn">Save</button>
+        </div>
+        <div>
+            <button id="sync-btn">Synchronize</button>
+            <button id="load-sync-btn">Load From Sync Storage</button>
+            <button id="save-sync-btn">Save To Sync Storage</button>
+        </div>
+        <div>
+            <button id="sync-config-btn">Synchronize Configuration</button>
+            <select id="subscriptions">
+            </select>
+        </div>
+        <div>
+            <button id="import-btn">Import</button>
+            <button id="export-btn">Export</button>
+            <button id="show-container-btn">Show Container</button>
+        </div>
     </div>
     <div id="editor"></div>
     <div id="error" style="display:none;"></div>
     <a id="file-download" href="" download="" style="display: none;"></a>
-
+    <input id="file-chooser" type="file" style="display: none;">
 
     <script src="index.js"></script>
 </body>
