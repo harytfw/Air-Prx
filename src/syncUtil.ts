@@ -54,8 +54,11 @@ export function loadRemoteCIDR(url: string, base64 = false): Promise<string[]> {
         }).then(text => loadCIDR(text));
 }
 
-export async function syncConfig(config: types.Configuration) {
-    const url = config.subSource;
+export async function syncConfig(config: types.Configuration, index: number) {
+    if(!Array.isArray(config.subscriptions)) {
+        return;
+    }
+    const url = config.subscriptions[index];
     if (!url) {
         debugLog('require subcription source');
         return;
@@ -65,7 +68,7 @@ export async function syncConfig(config: types.Configuration) {
         const c = JSON.parse(text) as types.Configuration;
         Object.assign(config, c);
     } catch (ex) {
-        debugLog('fail to get sync config: ', ex);
+        debugLog('fail to sync config: ', ex);
     }
 }
 

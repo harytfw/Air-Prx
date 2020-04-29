@@ -48,7 +48,7 @@ export const ALL_FEATURES: Feature[] = ['limit_my_ip', 'ipv6', 'history', 'debug
 export interface Configuration {
     features: Feature[]
     groups: GroupConfig[],
-    subSource?: string, // 全局订阅源
+    subscriptions?: string[], // 全局订阅源
     myIp?: string;
     myIpList?: string[],
 }

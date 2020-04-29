@@ -1,5 +1,3 @@
-
-
 import CodeMirror from 'codemirror'
 import "codemirror/lib/codemirror.css";
 import 'codemirror/addon/fold/foldgutter.css';
@@ -98,7 +96,7 @@ async function onSync() {
 
 async function onSyncConfig() {
     const cloned = JSON.parse(editor.getValue()) as types.Configuration;
-    await syncConfig(cloned);
+    await syncConfig(cloned, 0);
     editor.setValue(JSON.stringify(cloned));
 }
 
