@@ -156,7 +156,7 @@ async function removeHostnameFromGroup(index: number) {
     browser.storage.local.set(config);
 }
 
-async function onDisableProxyChange(event:Event) {
+async function onChangeProxyState(event: Event) {
     const checkbox = event.target as HTMLInputElement;
     setProxyState(checkbox.checked);
 }
@@ -166,7 +166,7 @@ async function init() {
     document.querySelector("#open-options-btn")!.addEventListener("click", openOptionsPage);
     document.querySelector("#clear-cache-btn")!.addEventListener("click", clearCache);
     document.querySelector("#update-myip-btn")!.addEventListener("click", updateMyIp);
-    document.querySelector("#disable-proxy-btn")!.addEventListener("click", onDisableProxyChange);
+    document.querySelector("#change-proxy-state")!.addEventListener("click", onChangeProxyState);
     document.querySelector("table")!.addEventListener("click", onULClick);
     document.querySelector("table")!.addEventListener("change", onInputChange);
     const config = await browser.storage.local.get() as types.Configuration;
@@ -174,6 +174,10 @@ async function init() {
         setVisiable('#update-myip-btn', true);
     }
     initGroupList();
+
+    browser.runtime.sendMessage({ name: 'getProxyState' }).then(state => {
+        (document.querySelector('#change-proxy-state') as HTMLInputElement).checked = state;
+    })
 }
 
 init();

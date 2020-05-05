@@ -77,7 +77,7 @@ export const TEST_PROXY: ProxyInfo = {
     port: 1081
 }
 
-export type ExtEvent = 'getCache' | 'clearCache' | 'updateMyIp' | 'setProxyState';
+export type ExtEvent = 'getCache' | 'clearCache' | 'updateMyIp' | 'setProxyState' | 'getProxyState';
 
 export type ExtEventMessage = {
     name: ExtEvent,

@@ -1,11 +1,11 @@
 
-import * as types from '../types';
-import { Cache } from '../proxy-cache';
-import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../group'
-import { MyIpMatcher } from '../myip-matcher';
-import { ContainerGroup } from '../group/container-group';
-import { ipToInt32, debugLog, enableDebugLog, disableDebugLog, buildCookieStoreIdMap, constructorName, buildRequestSummary } from '../util'
-import { HistoryManager } from '../history-manager';
+import * as types from '../../types';
+import { Cache } from '../../proxy-cache';
+import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../../group'
+import { MyIpMatcher } from '../../myip-matcher';
+import { ContainerGroup } from '../../group/container-group';
+import { ipToInt32, debugLog, enableDebugLog, disableDebugLog, buildCookieStoreIdMap, constructorName, buildRequestSummary } from '../../util'
+import { HistoryManager } from '../../history-manager';
 
 const DIRECT_PROXYINFO: types.ProxyInfo = { type: "direct" };
 

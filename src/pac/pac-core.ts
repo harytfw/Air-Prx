@@ -1,6 +1,6 @@
 
 import './types';
-import { Core, buildProxyInfoMap, buildGroups } from "../bg/core";
+import { Core, buildProxyInfoMap, buildGroups } from "../bg/firefox/core";
 import { debugLog, extractDomainAndProtocol, enableDebugLog, disableDebugLog, ipToInt32, constructorName, toCIDR } from '../util'
 import { IpRuleGroup } from '../group';
 import * as types from '../types';

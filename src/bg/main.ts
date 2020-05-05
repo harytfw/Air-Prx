@@ -1,5 +1,5 @@
-import { init_firefox } from './firefox';
-import { init_chromium } from './chromium';
+import { init_firefox } from './firefox/firefox';
+import { init_chromium } from './chromium/chromium';
 import { isChromium } from '../util';
 
 

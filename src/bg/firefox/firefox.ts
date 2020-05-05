@@ -1,9 +1,9 @@
 
 import 'webextension-polyfill/dist/browser-polyfill.js';
 import { Core, buildCore } from './core';
-import { Cache } from '../proxy-cache';
-import { debugLog, } from '../util';
-import * as types from '../types';
+import { Cache } from '../../proxy-cache';
+import { debugLog, } from '../../util';
+import * as types from '../../types';
 
 let core: Core | null = null;
 
@@ -49,6 +49,46 @@ function objectifyCache(map: Map<any, Cache<any, any>>): object {
     return obj;
 }
 
+function handleEvent(msg: types.ExtEventMessage, sendResponse) {
+    console.log(msg);
+    switch (msg.name) {
+        case 'getCache': {
+            if (core) {
+                sendResponse(objectifyCache(core.caches));
+            } else {
+                sendResponse({});
+            }
+            break;
+        }
+        case 'clearCache': {
+            if (core) {
+                for (const cache of core.caches.values()) {
+                    cache.clear();
+                }
+                debugLog('clear cache done');
+            }
+            break;
+        }
+        case 'updateMyIp': {
+            if (core) {
+                core.updateMyIP();
+            }
+            break;
+        }
+        case 'setProxyState': {
+            if (core) {
+                core.tempDisable = !Boolean(msg.data);
+            }
+            break;
+        }
+        case 'getProxyState': {
+            if(core) {
+                sendResponse(!core.tempDisable);
+            }
+        }
+    }
+}
+
 export function init_firefox() {
     console.log('init firefox');
     browser.proxy.onError.addListener(error => {
@@ -62,30 +102,8 @@ export function init_firefox() {
     });
 
     browser.runtime.onMessage.addListener((msg: types.ExtEventMessage, _, sendResponse) => {
-        console.log(msg);
-        if (msg.name === 'getCache') {
-            if (core) {
-                sendResponse(objectifyCache(core.caches));
-            } else {
-                sendResponse({});
-            }
-        } else if (msg.name === 'clearCache') {
-            if (core) {
-                for (const cache of core.caches.values()) {
-                    cache.clear();
-                }
-                debugLog('clear cache done');
-            }
-        } else if (msg.name === 'updateMyIp') {
-            if (core) {
-                core.updateMyIP();
-            }
-        } else if (msg.name === 'setProxyState') {
-            if (core) {
-                core.tempDisable = Boolean(msg.data);
-            }
-        }
-    })
+        handleEvent(msg, sendResponse);
+    });
 
     init();
 }

@@ -32,7 +32,7 @@ function formateProxyInfo(proxyInfo: types.ProxyInfo) {
 let core: PacCore | null = null;
 
 function init_PAC() {
-    let config = "TO_REPLACE" as any;
+    let config = "CONFIG_REPLACE_MARKER" as any;
     if (typeof config === "string") {
         throw new Error('PLEASE REPLACE CONFIG');
     }
