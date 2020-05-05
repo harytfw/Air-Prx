@@ -80,6 +80,10 @@ export function init_firefox() {
             if (core) {
                 core.updateMyIP();
             }
+        } else if (msg.name === 'setProxyState') {
+            if (core) {
+                core.tempDisable = Boolean(msg.data);
+            }
         }
     })
 

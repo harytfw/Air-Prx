@@ -21,6 +21,10 @@ function updateMyIp() {
     browser.runtime.sendMessage({ name: 'updateMyIp' });
 }
 
+function setProxyState(state: boolean) {
+    browser.runtime.sendMessage({ name: 'setProxyState', data: state });
+}
+
 function hideEl(selector: string) {
     (document.querySelector(selector) as HTMLElement).style.display = 'none';
 }
@@ -152,11 +156,17 @@ async function removeHostnameFromGroup(index: number) {
     browser.storage.local.set(config);
 }
 
+async function onDisableProxyChange(event:Event) {
+    const checkbox = event.target as HTMLInputElement;
+    setProxyState(checkbox.checked);
+}
+
 async function init() {
     console.log("init");
     document.querySelector("#open-options-btn")!.addEventListener("click", openOptionsPage);
     document.querySelector("#clear-cache-btn")!.addEventListener("click", clearCache);
     document.querySelector("#update-myip-btn")!.addEventListener("click", updateMyIp);
+    document.querySelector("#disable-proxy-btn")!.addEventListener("click", onDisableProxyChange);
     document.querySelector("table")!.addEventListener("click", onULClick);
     document.querySelector("table")!.addEventListener("change", onInputChange);
     const config = await browser.storage.local.get() as types.Configuration;

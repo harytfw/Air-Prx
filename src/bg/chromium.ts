@@ -15,6 +15,19 @@ async function generatePAC(config) {
 
 }
 
+function alwaysDIRECT() {
+    chrome.proxy.settings.set({
+        value: {
+            mode: "pac_script",
+            pacScript: {
+                data: `function FindProxyForURL() { return 'DIRECT';}`,
+            }
+        }, scope: 'regular'
+    }, function (...args) {
+        console.log(...args)
+    });
+}
+
 function onProxyError(err) {
     console.error(err);
 }
@@ -37,7 +50,6 @@ async function init() {
             console.log(...args)
         }
     );
-
 }
 
 export function init_chromium() {
@@ -50,7 +62,14 @@ export function init_chromium() {
         if (msg.name === 'clearCache') {
             init();
             debugLog('clear cache done');
+        } else if (msg.name === 'setProxyState') {
+            if(Boolean(msg.data)) {
+                init();
+            } else {
+                alwaysDIRECT();
+            }
         }
+
     });
     init();
 }

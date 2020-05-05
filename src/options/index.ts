@@ -12,6 +12,8 @@ import * as types from '../types';
 import { debugLog, buildCookieStoreIdMap, enableDebugLog } from '../util';
 import { syncGroup, syncConfig } from '../syncUtil';
 
+const SPACE_NUM = 2;
+
 const editor = CodeMirror(document.body.querySelector('#editor')! as HTMLDivElement, {
     mode: { name: "javascript", json: true },
     lineNumbers: true,
@@ -60,7 +62,7 @@ async function saveSync() {
 }
 
 async function load() {
-    const json = JSON.stringify(await getConfig(), null, 2);
+    const json = JSON.stringify(await getConfig(), null, SPACE_NUM);
     editor.setValue(json);
     buildSubscriptionOptions();
     debugLog('load config');
@@ -76,7 +78,7 @@ async function onSync() {
     if (!Array.isArray(config.groups)) {
         return;
     }
-    debugLog('before synchronize', JSON.parse(JSON.stringify(config)));
+    debugLog('before synchronize', JSON.parse(JSON.stringify(config, null, SPACE_NUM)));
     let err = '';
     for (const plainGroup of config.groups) {
         try {
@@ -96,12 +98,14 @@ async function onSync() {
     debugLog('after synchronize', config);
 }
 
-
 async function onSyncConfig() {
     const cloned = JSON.parse(editor.getValue()) as types.Configuration;
-    await syncConfig(cloned, 0);
-    editor.setValue(JSON.stringify(cloned));
-    buildSubscriptionOptions();
+    const select = document.querySelector('#subscriptions') as HTMLSelectElement;
+    if (select.value) {
+        await syncConfig(cloned, select.value);
+        editor.setValue(JSON.stringify(cloned, null, SPACE_NUM));
+        buildSubscriptionOptions();
+    }
 }
 
 
