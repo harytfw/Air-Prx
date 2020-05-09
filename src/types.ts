@@ -24,7 +24,7 @@ export enum ProxyResult {
 }
 
 export type SubType = 'builtin_china_ip' | 'builtin_gfw' | 'cidr' | 'gfw' | 'base64_gfw' | 'autoproxy';
-export type MatchType = 'ip' | 'std' | 'hostname' | 'void' | 'container';
+export type MatchType = 'ip' | 'std' | 'hostname' | 'document_hostname' | 'void' | 'container';
 
 export interface GroupConfig {
     name: string,

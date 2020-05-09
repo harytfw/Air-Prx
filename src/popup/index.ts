@@ -82,7 +82,7 @@ async function initGroupList() {
         row.querySelector(".group-name")!.textContent = group.name;
         index += 1;
         const checkbox = row.querySelector(".add-hostname") as HTMLInputElement;
-        if (group.matchType === 'hostname') {
+        if (group.matchType === 'hostname' || group.matchType === 'document_hostname') {
             checkbox.classList.remove("hide-add-hostname");
             console.log(checkbox.className);
             checkbox.checked = group.rules ? group.rules.includes(hostname) : false;

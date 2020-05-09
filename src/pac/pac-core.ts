@@ -45,12 +45,12 @@ export class PacCore extends Core {
             }
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
-                debugLog('proxy result: PROXY')
                 pInfo = this.resolveProxyInfo(g.proxyInfo);
+                debugLog('proxy result: PROXY', pInfo);
                 break;
             } else if (result === types.ProxyResult.notProxy) {
-                debugLog('proxy result: NOT PROXY');
                 pInfo = this.resolveProxyInfo(DIRECT_PROXYINFO);
+                debugLog('proxy result: NOT PROXY');
                 break;
             } else if (result === types.ProxyResult.continue) {
                 debugLog('proxy result: CONTINUE');

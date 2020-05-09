@@ -31,7 +31,7 @@ function handleProxyRequest(requestInfo) {
         return { type: 'direct' };
     }
     const start = performance.now();
-    debugLog(requestInfo.requestId, 'start');
+    debugLog(requestInfo.requestId, 'start', requestInfo.url);
     const p = core.getProxy(requestInfo);
     return p.then((proxy) => {
         debugLog(requestInfo.requestId, 'end', performance.now() - start, 'ms');

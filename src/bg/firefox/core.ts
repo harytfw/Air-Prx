@@ -1,7 +1,7 @@
 
 import * as types from '../../types';
 import { Cache } from '../../proxy-cache';
-import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostNameRuleGroup } from '../../group'
+import { IpRuleGroup, StdRuleGroup, BaseRuleGroup, VoidRuleGroup, HostnameRuleGroup, DocumentHostnameGroup } from '../../group'
 import { MyIpMatcher } from '../../myip-matcher';
 import { ContainerGroup } from '../../group/container-group';
 import { ipToInt32, debugLog, enableDebugLog, disableDebugLog, buildCookieStoreIdMap, constructorName, buildRequestSummary } from '../../util'
@@ -39,7 +39,7 @@ export class Core {
         this.groups = [];
         this.proxyInfoMap.clear();
         this.features.clear();
-        for(const cache of this.caches.values()) {
+        for (const cache of this.caches.values()) {
             cache.clear();
         }
         this.caches.clear();
@@ -99,7 +99,7 @@ export class Core {
             debugLog('start feach dns');
             const record = await browser.dns.resolve(summary.hostName);
             summary.ipAddress = record.addresses[0];
-            debugLog('fetch dns done');
+            debugLog('fetch dns done:');
         }
     }
 
@@ -119,17 +119,18 @@ export class Core {
 
         const key = this.computeKey(summary);
         const cache = this.computeCache(summary);
+        debugLog(summary);
         if (cache.has(key)) {
             pInfo = cache.get(key)!;
             debugLog('hit cache', 'key:', key, 'proxy info:', pInfo);
             this.historyManager.addHitCache(summary);
             return Promise.resolve(pInfo);
         }
-
         for (const g of this.groups) {
             debugLog('check group', 'name:', g.name, 'type:', constructorName(g));
             if (g instanceof IpRuleGroup && typeof summary.ipAddress !== 'string') {
                 await this.fillIpAddress(summary);
+                debugLog(summary);
             }
             const result = g.getProxyResult(summary);
             if (result === types.ProxyResult.proxy) {
@@ -183,7 +184,10 @@ export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<s
     for (const g of groups) {
         switch (g.matchType) {
             case 'hostname':
-                ruleGroups.push(new HostNameRuleGroup(g.name, g.proxyInfo));
+                ruleGroups.push(new HostnameRuleGroup(g.name, g.proxyInfo, g.rules ? g.rules : []));
+                break;
+            case 'document_hostname':
+                ruleGroups.push(new DocumentHostnameGroup(g.name, g.proxyInfo, g.rules ? g.rules : []));
                 break;
             case 'void':
                 ruleGroups.push(new VoidRuleGroup(g.name, g.proxyInfo));
@@ -198,6 +202,7 @@ export function buildGroups(groups: types.GroupConfig[], cookieStoreIdMap: Map<s
                 break;
             default:
                 console.error('not supported match type: ', g.matchType);
+                break;
         }
         if (g.matchType === 'container') {
             const containerGroup = buildContainerGroup(g, cookieStoreIdMap);
@@ -238,7 +243,7 @@ export async function buildCore(config: types.Configuration): Promise<Core> {
     } else {
         disableDebugLog();
     }
-    if(core.features.has('history')) {
+    if (core.features.has('history')) {
         core.historyManager.enableLog();
     } else {
         core.historyManager.disableLog();

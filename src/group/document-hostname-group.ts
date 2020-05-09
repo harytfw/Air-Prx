@@ -1,6 +1,6 @@
 import { BaseRuleGroup } from "./base-rule-group";
 import * as types from '../types';
-export class HostnameRuleGroup extends BaseRuleGroup {
+export class DocumentHostnameGroup extends BaseRuleGroup {
 
     rules: string[];
 
@@ -10,7 +10,7 @@ export class HostnameRuleGroup extends BaseRuleGroup {
     }
 
     getProxyResult(summary: types.RequestSummary) {
-        if (summary.hostName && this.rules.includes(summary.hostName)) {
+        if (summary.documentHostName && this.rules.includes(summary.documentHostName)) {
             return types.ProxyResult.proxy;
         }
         return types.ProxyResult.continue;

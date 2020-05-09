@@ -2,6 +2,16 @@
     "features": [],
     "groups": [
         {
+            "name":"direct hostname",
+            "enable":true,
+            "matchType":"hostname",
+            "proxyInfo": {
+                "type": "direct"
+            },
+            "rules": [
+            ]
+        },
+        {
             "name": "ip group",
             "enable": true,
             "matchType": "ip",
