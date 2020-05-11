@@ -12,6 +12,7 @@
     "@types/codemirror": "0.0.91",
     "@types/firefox-webext-browser": "^70.0.1",
     "@types/node": "^13.9.5",
+    "@types/stringify-object": "^3.2.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.2",
     "less": "^3.11.1",

@@ -8,6 +8,7 @@ module.exports = {
         'options/index': './src/options/index.ts',
         'options/result': './src/options/result.ts',
         'popup/index': './src/popup/index.ts',
+        'inspector/index': './src/inspector/index.ts',
         'pac/pac': './src/pac/pac.ts',
     },
     optimization: {
@@ -58,6 +59,7 @@ module.exports = {
             { from: './src/bg/main.html', to: './bg/main.html' },
             { from: './src/manifest.json', to: './' },
             { from: './options/*.*(html|css)', to: './', context: './src' },
+            { from: './inspector/*.*(html|css)', to: './', context: './src' },
             { from: './popup/*.*(html|css)', to: './', context: './src' },
             { from: './data/*.txt', to: './', context: './src' },
         ]),

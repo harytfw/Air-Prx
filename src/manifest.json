@@ -23,6 +23,7 @@
         "storage",
         "dns",
         "contextualIdentities",
+        "webRequest",
         "<all_urls>"
     ],
     "browser_specific_settings": {
