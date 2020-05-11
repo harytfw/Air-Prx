@@ -54,16 +54,26 @@ export class Core {
         });
     }
 
-    disableCache() {
-        this.useCache = false;
+    setProxyState(b: boolean) {
+        this.tempDisable = !b;
+    }
 
+    getProxyState() {
+        return !this.tempDisable;
+    }
+
+    setCacheState(b: boolean) {
+        if (!b) {
+            this.clearCache();
+        }
+        this.useCache = b;
+    }
+
+    clearCache() {
+        console.log('clear cache');
         for (const cache of this.caches.values()) {
             cache.clear();
         }
-    }
-
-    enableCache() {
-        this.useCache = true;
     }
 
     computeKey(summary: types.RequestSummary) {

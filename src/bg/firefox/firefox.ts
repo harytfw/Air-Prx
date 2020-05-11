@@ -19,10 +19,23 @@ async function init() {
         if (core) core.destory();
         core = await buildCore(config);
         (window as any).core = core;
+        core.setProxyState(getRememberProxyState()); 
     } catch (ex) {
         console.error(ex);
         core = null;
     }
+}
+
+function rememberProxyState(b: boolean) {
+    localStorage.setItem('proxyState', `${b}`);
+}
+
+function getRememberProxyState() {
+    const r = localStorage.getItem('proxyState')
+    if (r === null) {
+        return true;
+    }
+    return Boolean(r);
 }
 
 function handleProxyRequest(requestInfo) {
@@ -53,38 +66,25 @@ function handleEvent(msg: types.ExtEventMessage, sendResponse) {
     console.log(msg);
     switch (msg.name) {
         case 'getCache': {
-            if (core) {
-                sendResponse(objectifyCache(core.caches));
-            } else {
-                sendResponse({});
-            }
+            sendResponse(core ? objectifyCache(core.caches) : {});
             break;
         }
         case 'clearCache': {
-            if (core) {
-                for (const cache of core.caches.values()) {
-                    cache.clear();
-                }
-                debugLog('clear cache done');
-            }
+            core?.clearCache();
             break;
         }
         case 'updateMyIp': {
-            if (core) {
-                core.updateMyIP();
-            }
+            core?.updateMyIP();
             break;
         }
         case 'setProxyState': {
-            if (core) {
-                core.tempDisable = !Boolean(msg.data);
-            }
+            core?.setProxyState(Boolean(msg.data));
+            rememberProxyState(core ? core.getProxyState() : false);
             break;
         }
         case 'getProxyState': {
-            if(core) {
-                sendResponse(!core.tempDisable);
-            }
+            sendResponse(core?.tempDisable);
+            break;
         }
     }
 }
